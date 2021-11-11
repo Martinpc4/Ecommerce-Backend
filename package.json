@@ -10,7 +10,7 @@
         "watch-tsc": "tsc -w",
         "watch-sass": "sass -w",
         "watch": "npm run watch-tsc",
-        "start": "nodemon ./dist/index.js"
+        "start": "node ./dist/index.js"
     },
     "keywords": [],
     "author": "Martín Pérez Cobo",
