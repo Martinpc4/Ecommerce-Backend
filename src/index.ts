@@ -7,7 +7,6 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import logger from './logs/index.logs';
-const yargs = require('yargs')(process.argv.slice(2));
 
 import cluster from 'cluster';
 import os from 'os';
@@ -19,6 +18,7 @@ import AUTH from './routers/auth.route';
 import MAIN from './routers/main.route';
 
 // ! Environment variables
+
 // Configuration
 dotenv.config();
 // Variables check
@@ -26,10 +26,6 @@ if (process.env.HOME_ROUTE === undefined) {
     logger.error('Home Route is missing, cannot initiate server');
     throw new Error('Home Route is missing, cannot initiate server');
 }
-
-// ! Node Arguments (Yargs)
-const default_args = { port: 8080 };
-const args = yargs.default(default_args).argv;
 
 // ! Express Server
 
@@ -88,7 +84,7 @@ if (cluster.isPrimary) {
 	});
 } else {
 	console.log(`Worker PID ${process.pid} is running`);
-    app.listen(args.port, () => {
-        logger.info(`Express server instance running on port ${args.port}`);
+    app.listen(process.env.PORT, () => {
+        logger.info(`Express server instance running on port ${process.env.PORT}`);
     });
 }
