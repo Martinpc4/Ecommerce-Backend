@@ -1,13 +1,15 @@
 // ! Imports
-// * Inerfaces & Types
-import { NextFunction, Request, Response } from 'express';
+// * Modules
+import { Request, Response, NextFunction } from 'express';
 
+// ! Middleware
 function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-    if (req.isAuthenticated()) {
-        return next();
-    } else {
-        res.redirect('/auth/login');
-    }
-};
+	if (req.user !== undefined) {
+		return next();
+	} else {
+		res.redirect('/auth/login');
+	}
+}
 
+// ! Exports
 export default isAuthenticated;

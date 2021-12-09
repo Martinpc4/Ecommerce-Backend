@@ -1,18 +1,24 @@
-import mongoose from '../mongodb';
-import { productProperties } from '../interfaces/controller.interfaces';
+// ! Imports
+// * Interfaces
+import { productPropertiesInterface } from '../interfaces/products.interfaces';
+// * Utils
+import mongoose from '../utils/mongodb';
 
-const productSchema: mongoose.Schema = new mongoose.Schema<productProperties>({
-    name: { type: String, required: true },
-    description: { type: String, required: true },
-    price: { type: Number, required: true },
-    imagesURL: { type: [String], required: true },
-    timeStamp: { type: Date, required: true, default: new Date() },
-    stock: { type: Number, required: true },
+// ! Model's Schema
+const productSchema: mongoose.Schema = new mongoose.Schema<productPropertiesInterface>({
+	name: { type: String, required: true },
+	description: { type: String, required: true },
+	price: { type: Number, required: true },
+	imagesURL: { type: [String], required: true },
+	timeStamp: { type: Date, required: true, default: new Date() },
+	stock: { type: [Number], required: true },
+	colors: { type: [String], required: false },
+	memory: { type: Number, required: false },
+	categoryId: { type: Number, required: true },
 });
 
-const ProductModel = mongoose.model<productProperties>(
-    'products',
-    productSchema
-);
+// ! Model Instance
+const ProductsModel = mongoose.model<productPropertiesInterface>('products', productSchema);
 
-export default ProductModel;
+// ! Exports
+export default ProductsModel;

@@ -1,3 +1,7 @@
+*.jpg
+*.jpeg
+*.png
+
 # Logs
 *.log
 npm-debug.log*
