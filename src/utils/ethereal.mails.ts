@@ -8,14 +8,21 @@ const adminMail: string = 'adminMail@mail.com';
 let mailOptions: MailOptions = {};
 let transportOptions: any = {};
 
+
 if (process.env.NODE_ENV === 'production') {
+	if (process.env.NODEMAILER_USER_PROD === undefined || process.env.NODEMAILER_PASSWORD_PROD === undefined) {
+		throw new Error('Nodemailer production credentials not found');
+	}
 } else {
+	if (process.env.NODEMAILER_USER_DEV === undefined || process.env.NODEMAILER_PASSWORD_DEV === undefined || process.env.NODEMAILER_HOST_DEV === undefined) {
+		throw new Error('Nodemailer development credentials not found');
+	}
 	(transportOptions = {
-		host: 'smtp.ethereal.email',
+		host: process.env.NODEMAILER_HOST_DEV,
 		port: 587,
 		auth: {
-			user: 'fatima.davis10@ethereal.email',
-			pass: 'wK7K965mnn15M9FVgZ',
+			user: process.env.NODEMAILER_USER_DEV,
+			pass: process.env.NODEMAILER_PASSWORD_DEV,
 		},
 	}),
 		(mailOptions = {

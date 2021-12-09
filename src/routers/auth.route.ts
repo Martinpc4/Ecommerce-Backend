@@ -7,6 +7,8 @@ import path from 'path';
 import UsersController from '../controllers/user.controller';
 // * Utils
 import mongoose from '../utils/mongodb';
+// * Middlewares
+import isAuthenticated from '../middlewares/isAuthenticated.middleware';
 // * Auth Strategies
 import passport from '../auth/passport.auth';
 // * Loggers
@@ -78,7 +80,6 @@ AUTH.get('/login', (req: Request, res: Response) => {
 		res.status(500).send('Internal Server Error');
 	}
 });
-//TODO FINISH THIS
 AUTH.get('/logout', (req: Request, res: Response) => {
 	req.session.destroy((err) => {
 		throw new Error();
@@ -181,6 +182,7 @@ AUTH.get(
 );
 
 // * Github Auth
+// Login
 AUTH.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 AUTH.get(
 	'/github/callback',
