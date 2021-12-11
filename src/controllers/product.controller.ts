@@ -103,6 +103,7 @@ class ProductControllerClass {
 		const productsData: productPropertiesInterface[] = await ProductsModel.find({});
 
 		productsData.forEach((productProperties) => {
+			console.log(new ProductClass(productProperties));
 			products = [...products, new ProductClass(productProperties)];
 		});
 

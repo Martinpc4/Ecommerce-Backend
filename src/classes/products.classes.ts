@@ -1,60 +1,67 @@
 // ! Imports
 // * Controllers
 import { cartProductsInterface } from '../interfaces/carts.interfaces';
-import { productPropertiesInterface } from '../interfaces/products.interfaces';
+import { productPropertiesInterface, genericProductPropertiesInterface } from '../interfaces/products.interfaces';
 // * Utils
 import mongoose from '../utils/mongodb';
 
 // ! Classes
-// * Cart Product Class
-class CartProductClass {
+// * Generic Product Class
+class GenericProductClass {
 	_id: mongoose.Types.ObjectId;
+	categoryId: number;
 	name: string;
 	description: string;
 	price: number;
 	imagesURL: string[];
 	timeStamp: Date;
-	categoryId: number;
-	color: string;
 	memory: number;
+	constructor(genericProductProperties: genericProductPropertiesInterface) {
+		this._id = genericProductProperties._id;
+		this.categoryId = genericProductProperties.categoryId;
+		this.name = genericProductProperties.name;
+		this.description = genericProductProperties.description;
+		this.price = genericProductProperties.price;
+		this.imagesURL = genericProductProperties.imagesURL;
+		this.timeStamp =
+			genericProductProperties.timeStamp !== undefined ? genericProductProperties.timeStamp : new Date();
+		this.memory = genericProductProperties.memory;
+	}
+}
+// * Cart Product Class
+class CartProductClass extends GenericProductClass {
+	color: string;
 	amount: number;
 	constructor(cartProductProperties: cartProductsInterface) {
-		(this._id = cartProductProperties._id),
-			(this.name = cartProductProperties.name),
-			(this.price = cartProductProperties.price),
-			(this.amount = cartProductProperties.amount),
-			(this.color = cartProductProperties.color),
-			(this.description = cartProductProperties.description),
-			(this.imagesURL = cartProductProperties.imagesURL),
-			(this.categoryId = cartProductProperties.categoryId),
-			(this.timeStamp =
-				cartProductProperties.timeStamp !== undefined ? cartProductProperties.timeStamp : new Date()),
-			(this.memory = cartProductProperties.memory);
+		super({
+			_id: cartProductProperties._id,
+			categoryId: cartProductProperties.categoryId,
+			name: cartProductProperties.name,
+			description: cartProductProperties.description,
+			price: cartProductProperties.price,
+			imagesURL: cartProductProperties.imagesURL,
+			timeStamp: cartProductProperties.timeStamp,
+			memory: cartProductProperties.memory,
+		});
+		(this.amount = cartProductProperties.amount), (this.color = cartProductProperties.color);
 	}
 }
 // * Product Class
-class ProductClass {
-	name: string;
-	_id: mongoose.Types.ObjectId;
-	description: string;
-	price: number;
-	imagesURL: string[];
-	timeStamp: Date;
+class ProductClass extends GenericProductClass {
 	stock: number[];
-	memory: number;
 	colors: string[];
-	categoryId: number;
 	constructor(productProperties: productPropertiesInterface) {
-		(this.timeStamp = productProperties.timeStamp !== undefined ? productProperties.timeStamp : new Date()),
-			(this.stock = productProperties.stock),
-			(this.name = productProperties.name),
-			(this._id = productProperties._id),
-			(this.description = productProperties.description),
-			(this.price = Number(productProperties.price)),
-			(this.imagesURL = productProperties.imagesURL),
-			(this.memory = Number(productProperties.memory)),
-			(this.categoryId = Number(productProperties.categoryId)),
-			(this.colors = productProperties.colors);
+		super({
+			_id: productProperties._id,
+			categoryId: productProperties.categoryId,
+			name: productProperties.name,
+			description: productProperties.description,
+			price: productProperties.price,
+			imagesURL: productProperties.imagesURL,
+			timeStamp: productProperties.timeStamp,
+			memory: productProperties.memory,
+		});
+		(this.stock = productProperties.stock), (this.colors = productProperties.colors);
 	}
 }
 
