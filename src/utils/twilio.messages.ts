@@ -10,7 +10,7 @@ let messagesOptions;
 const adminPhoneNumber: number = 541184597864;
 
 if (process.env.NODE_ENV === 'production') {
-	if (process.env.TWILIO_ACCOUNT_ID_PROD == undefined || process.env.TWILIO_AUTH_TOKEN_PROD === undefined || process.env.TWILIO_MESSAGES_OPTIONS_PROD === undefined) {
+	if (process.env.TWILIO_ACCOUNT_ID_PROD == undefined || process.env.TWILIO_AUTH_TOKEN_PROD === undefined || process.env.TWILIO_MESSAGING_SERVICE_ID_PROD === undefined) {
 		  throw new Error('Twilio production creadentials are not defined');
 	}
 	accountId = process.env.TWILIO_ACCOUNT_ID_PROD;
