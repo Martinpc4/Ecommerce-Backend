@@ -55,10 +55,7 @@ API.get('/products/:id', async (req: Request, res: Response) => {
 				router: 'API',
 				method: 'GET',
 			});
-			res.status(200).json({
-				success: true,
-				productProperties: await ProductsController.getById(productId),
-			});
+			res.status(200).json(await ProductsController.getById(productId));
 		}
 	} catch (err) {
 		logger.error({
