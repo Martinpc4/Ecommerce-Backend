@@ -2,7 +2,11 @@
 // * Classes
 import { ProductClass, CartProductClass } from '../classes/products.classes';
 // * Interfaces
-import { productPropertiesInterface, cartProductsInterface, idsInArrayMethodInterface } from '../interfaces/products.interfaces';
+import {
+	productPropertiesInterface,
+	cartProductsInterface,
+	idsInArrayMethodInterface,
+} from '../interfaces/products.interfaces';
 // * Models
 import ProductsModel from '../models/products.model';
 // * Utils
@@ -88,14 +92,26 @@ class ProductControllerClass {
 		}
 	}
 	async getById(productId: mongoose.Types.ObjectId): Promise<ProductClass | null> {
-		const productFound: productPropertiesInterface | null = await ProductsModel.findById(
-			new mongoose.Types.ObjectId(productId)
-		);
+		const productFound: productPropertiesInterface | null = await ProductsModel.findById(productId);
 
 		if (productFound !== null) {
 			return new ProductClass(productFound);
 		}
 		return productFound;
+	}
+	async getCategoryById(categoryId: number): Promise<ProductClass[]> {
+		const categodyProducts: productPropertiesInterface[] | null = await ProductsModel.find({
+			categoryId: { $eq: categoryId },
+		});
+		if (categodyProducts === null) {
+			return [];
+		} else {
+			let products: ProductClass[] = [];
+			categodyProducts.forEach((productProperties) => {
+				products = [...products, new ProductClass(productProperties)];
+			});
+			return products;
+		}
 	}
 	async getAll(): Promise<ProductClass[]> {
 		let products: ProductClass[] = [];

@@ -38,7 +38,38 @@ API.get('/products/', async (req: Request, res: Response) => {
 		res.status(500).send(err);
 	}
 });
-API.get('/products/:id', async (req: Request, res: Response) => {
+API.get('/products/category/:categoryId', async (req: Request, res: Response) => {
+	try {
+		if (req.params.categoryId !== undefined) {
+			const categoryId = Number(req.params.categoryId);
+			logger.http({
+				message: 'Product list requested and sent',
+				router: 'API',
+				method: 'GET',
+				route: '/products/category/:categoryId',
+			});
+			res.status(200).json(await ProductsController.getCategoryById(categoryId));
+		} else {
+			logger.http({
+				message: 'Category requested but not sent because of invalid id',
+				router: 'API',
+				method: 'GET',
+				route: '/products/category/:categoryId',
+			});
+			res.status(404).send('Invalid id');
+		}
+	} catch (err) {
+		logger.error({
+			message: 'Get all products failed',
+			router: 'API',
+			method: 'GET',
+			route: '/products',
+			stack: err,
+		});
+		res.status(500).send(err);
+	}
+});
+API.get('/products/:productId', async (req: Request, res: Response) => {
 	try {
 		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.id);
 		if ((await ProductsController.exists(productId)) === false) {
