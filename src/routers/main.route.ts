@@ -4,8 +4,6 @@ import { Request, Response, Router } from 'express';
 // * Controllers
 import ProductsController from '../controllers/product.controller';
 import CartsController from '../controllers/cart.controller';
-// * Interfaces
-import { cartProductsInterface } from '../interfaces/carts.interfaces';
 // * Loggers
 import logger from '../logs/index.logs';
 // * Middlewares

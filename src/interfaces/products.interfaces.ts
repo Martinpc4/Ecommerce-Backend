@@ -3,19 +3,6 @@
 import mongoose from '../utils/mongodb';
 
 // ! Interfaces
-interface productPropertiesInterface {
-	_id: mongoose.Types.ObjectId;
-	categoryId: number;
-	name: string;
-	description: string;
-	price: number;
-	imagesURL: string[];
-	timeStamp: Date;
-	stock: number[];
-
-	colors: string[];
-	memory: number;
-}
 interface idsInArrayMethodInterface {
 	state: boolean;
 	missingProductIds: mongoose.Types.ObjectId[];
@@ -31,6 +18,19 @@ interface genericProductPropertiesInterface {
 	timeStamp: Date;
 	memory: number;
 }
+interface productPropertiesInterface extends genericProductPropertiesInterface {
+	stock: number[];
+	colors: string[];
+}
+interface cartProductsInterface extends genericProductPropertiesInterface {
+	color: string;
+	amount: number;
+}
 
 // ! Exports
-export { productPropertiesInterface, idsInArrayMethodInterface, genericProductPropertiesInterface };
+export {
+	productPropertiesInterface,
+	idsInArrayMethodInterface,
+	genericProductPropertiesInterface,
+	cartProductsInterface,
+};

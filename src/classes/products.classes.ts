@@ -1,7 +1,6 @@
 // ! Imports
 // * Controllers
-import { cartProductsInterface } from '../interfaces/carts.interfaces';
-import { productPropertiesInterface, genericProductPropertiesInterface } from '../interfaces/products.interfaces';
+import { productPropertiesInterface, cartProductsInterface, genericProductPropertiesInterface } from '../interfaces/products.interfaces';
 // * Utils
 import mongoose from '../utils/mongodb';
 
@@ -33,16 +32,7 @@ class CartProductClass extends GenericProductClass {
 	color: string;
 	amount: number;
 	constructor(cartProductProperties: cartProductsInterface) {
-		super({
-			_id: cartProductProperties._id,
-			categoryId: cartProductProperties.categoryId,
-			name: cartProductProperties.name,
-			description: cartProductProperties.description,
-			price: cartProductProperties.price,
-			imagesURL: cartProductProperties.imagesURL,
-			timeStamp: cartProductProperties.timeStamp,
-			memory: cartProductProperties.memory,
-		});
+		super(cartProductProperties);
 		(this.amount = cartProductProperties.amount), (this.color = cartProductProperties.color);
 	}
 }
@@ -51,16 +41,7 @@ class ProductClass extends GenericProductClass {
 	stock: number[];
 	colors: string[];
 	constructor(productProperties: productPropertiesInterface) {
-		super({
-			_id: productProperties._id,
-			categoryId: productProperties.categoryId,
-			name: productProperties.name,
-			description: productProperties.description,
-			price: productProperties.price,
-			imagesURL: productProperties.imagesURL,
-			timeStamp: productProperties.timeStamp,
-			memory: productProperties.memory,
-		});
+		super(productProperties);
 		(this.stock = productProperties.stock), (this.colors = productProperties.colors);
 	}
 }

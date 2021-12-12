@@ -10,8 +10,7 @@ import UsersController from '../controllers/user.controller';
 import { CartProductClass } from '../classes/products.classes';
 import { ReceiptClass } from '../classes/receipts.class';
 // * Interfaces
-import { cartProductsInterface } from '../interfaces/carts.interfaces';
-import { productPropertiesInterface } from '../interfaces/products.interfaces';
+import { productPropertiesInterface, cartProductsInterface } from '../interfaces/products.interfaces';
 // * Models
 import ProductModel from '../models/products.model';
 // * Utils

@@ -1,17 +1,12 @@
 {
     "name": "ecommerce-backend",
-    "version": "1.6.0",
+    "version": "1.6.2",
     "description": "",
     "main": "dist/main.js",
     "scripts": {
-        "build-tsc": "tsc",
-        "build-sass": "sass .",
-        "build": "npm run build-tsc",
-        "watch-tsc": "tsc -w",
-        "watch-sass": "sass -w",
-        "watch": "npm run watch-tsc",
-        "start": "nodemon ./dist/index.js",
-        "debug": "nodemon --watch ./src/index.ts -e .ts --exec node --inspect-brk -r ts-node/register ./src/index.ts"
+        "build": "tsc",
+        "watch": "tsc",
+        "start": "nodemon ./dist/index.js"
     },
     "keywords": [],
     "author": "Martín Pérez Cobo",
@@ -27,7 +22,6 @@
         "@types/passport-facebook": "^2.1.11",
         "@types/passport-github2": "^1.2.5",
         "@types/passport-local": "^1.0.34",
-        "nodemon": "^2.0.15",
         "ts-loader": "^9.2.5",
         "ts-node": "^10.3.0",
         "tsc-node": "^0.0.3",
@@ -47,6 +41,7 @@
         "morgan": "^1.10.0",
         "multer": "^1.4.3",
         "nodemailer": "^6.7.2",
+        "nodemon": "^2.0.15",
         "passport": "^0.5.0",
         "passport-facebook": "^3.0.0",
         "passport-github2": "^0.1.12",

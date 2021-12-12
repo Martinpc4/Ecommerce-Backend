@@ -6,7 +6,8 @@ import UsersController from './user.controller';
 import { CartClass } from '../classes/carts.classes';
 import { CartProductClass } from '../classes/products.classes';
 // * Interfaces
-import { cartPropertiesInterface, cartProductsInterface } from '../interfaces/carts.interfaces';
+import { cartPropertiesInterface } from '../interfaces/carts.interfaces';
+import { cartProductsInterface } from '../interfaces/products.interfaces';
 // * Models
 import CartsModel from '../models/carts.model';
 // * Utils

@@ -1,6 +1,8 @@
 // ! Imports
 // * Modules
 import mongoose from '../utils/mongodb';
+// * Interfaces
+import { cartProductsInterface } from './products.interfaces';
 
 // ! Interfaces
 interface cartPropertiesInterface {
@@ -11,18 +13,6 @@ interface cartPropertiesInterface {
 	timeStamp: Date;
 	state: boolean;
 }
-interface cartProductsInterface {
-	_id: mongoose.Types.ObjectId;
-	name: string;
-	description: string;
-	price: number;
-	imagesURL: string[];
-	timeStamp: Date;
-    categoryId: number;
-    color: string;
-    memory: number;
-	amount: number;
-}
 
 // ! Exports
-export { cartProductsInterface, cartPropertiesInterface}
+export { cartPropertiesInterface };

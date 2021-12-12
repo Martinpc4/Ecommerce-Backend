@@ -2,8 +2,7 @@
 // * Classes
 import { ProductClass, CartProductClass } from '../classes/products.classes';
 // * Interfaces
-import { productPropertiesInterface, idsInArrayMethodInterface } from '../interfaces/products.interfaces';
-import { cartProductsInterface } from '../interfaces/carts.interfaces';
+import { productPropertiesInterface, cartProductsInterface, idsInArrayMethodInterface } from '../interfaces/products.interfaces';
 // * Models
 import ProductsModel from '../models/products.model';
 // * Utils

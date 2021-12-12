@@ -2,8 +2,8 @@
 // * Controllers
 import ProductsController from '../controllers/product.controller';
 // * Interfaces
-import { cartProductsInterface, cartPropertiesInterface } from '../interfaces/carts.interfaces';
-import { productPropertiesInterface } from '../interfaces/products.interfaces';
+import { cartPropertiesInterface } from '../interfaces/carts.interfaces';
+import { productPropertiesInterface, cartProductsInterface } from '../interfaces/products.interfaces';
 // * Models
 import ProductsModel from '../models/products.model';
 // * Utils
