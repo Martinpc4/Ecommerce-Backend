@@ -9,8 +9,8 @@ import {
 } from '../interfaces/products.interfaces';
 // * Models
 import ProductsModel from '../models/products.model';
-// * Utils
-import mongoose from '../utils/mongodb';
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Controller
 class ProductControllerClass {
@@ -118,7 +118,6 @@ class ProductControllerClass {
 		const productsData: productPropertiesInterface[] = await ProductsModel.find({});
 
 		productsData.forEach((productProperties) => {
-			console.log(new ProductClass(productProperties));
 			products = [...products, new ProductClass(productProperties)];
 		});
 

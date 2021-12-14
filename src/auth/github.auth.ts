@@ -1,7 +1,6 @@
 // ! Imports
 // * Modules
 import { Strategy as GHStrategy } from 'passport-github2';
-import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 // * Controllers
 import UsersController from '../controllers/user.controller';
@@ -9,23 +8,16 @@ import UsersController from '../controllers/user.controller';
 import { UserClass } from '../classes/users.classes';
 // * Interfaces
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
-// * Utils
-import mongoose from '../utils/mongodb';
-
-// ! Environment Variables Module
-// Configuration
-dotenv.config();
-// Check for env variables
-if (process.env.GITHUB_CLIENT_ID === undefined || process.env.GITHUB_CLIENT_SECRET === undefined) {
-	throw new Error(`Github App Id or Client Secret not found in ENV file`);
-}
+// * Config
+import mongoose from '../config/mongodb.config';
+import env from '../config/env.config';
 
 // ! Github Strategy
 const GithubStrategy: GHStrategy = new GHStrategy(
 	{
-		clientID: process.env.GITHUB_CLIENT_ID,
-		clientSecret: process.env.GITHUB_CLIENT_SECRET,
-		callbackURL: `${process.env.SERVER_ADDRESS}/auth/github/callback`,
+		clientID: env.GITHUB_CLIENT_ID,
+		clientSecret: env.GITHUB_CLIENT_SECRET,
+		callbackURL: `${env.SERVER_ADDRESS}/auth/github/callback`,
 		scope: ['user:email'],
 	},
 	async (accessToken: any, refreshToken: any, profile: any, done: any) => {
@@ -33,7 +25,11 @@ const GithubStrategy: GHStrategy = new GHStrategy(
 			if (await UsersController.verifyGithubId(profile.id)) {
 				const userInstance: UserClass = await UsersController.getUserByGithubId(profile.id);
 				done(null, userInstance);
-			} else if (profile.name !== null && profile.emails[0].value !== undefined && profile.emails[0].value !== null) {
+			} else if (
+				profile.name !== null &&
+				profile.emails[0].value !== undefined &&
+				profile.emails[0].value !== null
+			) {
 				const userProperties: userPropertiesInterface = {
 					_id: new mongoose.Types.ObjectId(),
 					password: await bcrypt.hash(await bcrypt.genSalt(10), 10),
@@ -69,7 +65,7 @@ const GithubStrategy: GHStrategy = new GHStrategy(
 					const userInstance: UserClass = await UsersController.getUserByGithubId(profile.id);
 					done(null, userInstance);
 				} else {
-					done(new Error("Internal Server Error"), null);
+					done(new Error('Internal Server Error'), null);
 				}
 			} else {
 				done(new Error('Github did not provide enough user data to register or login user'), false);

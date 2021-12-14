@@ -1,7 +1,6 @@
 // ! Imports
 // * Modules
 import { Strategy as FBStrategy } from 'passport-facebook';
-import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 // * Controllers
 import UsersController from '../controllers/user.controller';
@@ -9,23 +8,16 @@ import UsersController from '../controllers/user.controller';
 import { UserClass } from '../classes/users.classes';
 // * Interfaces
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
-// * Utils
-import mongoose from '../utils/mongodb';
-
-// ! Environment Variables Module
-// Configuration
-dotenv.config();
-// Check for env variables
-if (process.env.FACEBOOK_APP_ID === undefined || process.env.FACEBOOK_APP_SECRET === undefined) {
-	throw new Error(`Facebbok App Id or Client Secret not found in ENV file`);
-}
+// * Config
+import mongoose from '../config/mongodb.config';
+import env from '../config/env.config';
 
 // ! Facebook Strategy
 const FacebookSrategy = new FBStrategy(
 	{
-		clientID: `${process.env.FACEBOOK_APP_ID}`,
-		clientSecret: `${process.env.FACEBOOK_APP_SECRET}`,
-		callbackURL: `${process.env.SERVER_ADDRESS}/auth/facebook/callback`,
+		clientID: `${env.FACEBOOK_APP_ID}`,
+		clientSecret: `${env.FACEBOOK_APP_SECRET}`,
+		callbackURL: `${env.SERVER_ADDRESS}/auth/facebook/callback`,
 		profileFields: ['id', 'name', 'emails', 'photos'],
 	},
 	async (accessToken, refreshToken, profile, done) => {
@@ -37,7 +29,9 @@ const FacebookSrategy = new FBStrategy(
 			const userProperties: userPropertiesInterface = {
 				_id: new mongoose.Types.ObjectId(),
 				password: await bcrypt.hash(await bcrypt.genSalt(10), 10),
-				name: `${profile.name.givenName}${profile.name.middleName !== undefined ? ` ${profile.name.middleName}` : ''}`,
+				name: `${profile.name.givenName}${
+					profile.name.middleName !== undefined ? ` ${profile.name.middleName}` : ''
+				}`,
 				lastName: profile.name.familyName,
 				timeStamp: new Date(),
 				email: {

@@ -1,8 +1,8 @@
 // ! Imports
 // * Interfaces
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
-// * Utils
-import mongoose from '../utils/mongodb';
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Model's Schema
 const userSchema: mongoose.Schema = new mongoose.Schema<userPropertiesInterface>({

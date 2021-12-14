@@ -1,6 +1,6 @@
 // ! Imports
 // * Modules
-import mongoose from '../utils/mongodb';
+import mongoose from '../config/mongodb.config';
 // * Interfaces
 import { cartProductsInterface } from './products.interfaces';
 

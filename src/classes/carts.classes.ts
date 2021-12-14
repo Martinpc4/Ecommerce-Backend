@@ -6,8 +6,8 @@ import { cartPropertiesInterface } from '../interfaces/carts.interfaces';
 import { productPropertiesInterface, cartProductsInterface } from '../interfaces/products.interfaces';
 // * Models
 import ProductsModel from '../models/products.model';
-// * Utils
-import mongoose from '../utils/mongodb';
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Class
 class CartClass {

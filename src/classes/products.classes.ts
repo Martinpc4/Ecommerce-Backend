@@ -1,8 +1,12 @@
 // ! Imports
 // * Controllers
-import { productPropertiesInterface, cartProductsInterface, genericProductPropertiesInterface } from '../interfaces/products.interfaces';
-// * Utils
-import mongoose from '../utils/mongodb';
+import {
+	productPropertiesInterface,
+	cartProductsInterface,
+	genericProductPropertiesInterface,
+} from '../interfaces/products.interfaces';
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Classes
 // * Generic Product Class

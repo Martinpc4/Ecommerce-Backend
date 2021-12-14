@@ -1,7 +1,6 @@
 // ! Imports
 // * Modules
 import { Strategy as LStrategy } from 'passport-local';
-import dotenv from 'dotenv';
 import { Request } from 'express';
 import bcrypt from 'bcrypt';
 // * Controllers
@@ -12,17 +11,16 @@ import { UserClass } from '../classes/users.classes';
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
 // * Models
 import UserModel from '../models/users.model';
-// * Utils
-import mongoose from '../utils/mongodb';
-
-// ! Environment Variables Module
-dotenv.config();
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Local Strategy
 const SignupLocalStrategy = new LStrategy(
-	{ passReqToCallback: true, passwordField: 'password', usernameField: 'email' },
+	{ passReqToCallback: true, passwordField: 'password', usernameField: 'username' },
 	async (req: Request, username: string, password: string, done: any): Promise<void> => {
 		try {
+			console.log(username);
+			console.log(password);
 			if (await UsersController.isUserByUsername(username)) {
 				done(null, false); // User Found in Database
 			} else {

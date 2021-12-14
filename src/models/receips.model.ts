@@ -1,8 +1,8 @@
 // ! Imports
 // * Interfaces
 import { receiptPropertiesInterface } from '../interfaces/receipt.interfaces';
-// * Utils
-import mongoose from '../utils/mongodb';
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Model's Schema
 const receiptSchema: mongoose.Schema = new mongoose.Schema<receiptPropertiesInterface>({

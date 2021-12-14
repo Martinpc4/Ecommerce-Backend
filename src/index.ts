@@ -5,7 +5,6 @@ import session from 'express-session';
 import passport from './auth/passport.auth';
 import cors from 'cors';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import logger from './logs/index.logs';
 import mongoStore = require('connect-mongo');
 import cluster from 'cluster';
@@ -15,20 +14,8 @@ import API from './routers/api.route';
 import CART from './routers/cart.route';
 import AUTH from './routers/auth.route';
 import MAIN from './routers/main.route';
-
-// ! Environment variables
-
-// * Configuration
-dotenv.config();
-// * Variables check
-if (process.env.HOME_ROUTE === undefined) {
-	logger.error('Home Route is missing, cannot initiate server');
-	throw new Error('Home Route is missing, cannot initiate server');
-}
-if (process.env.COOKIE_SESSION_SECRET === undefined) {
-	logger.error('Cookie Session Secret is missing, cannot initiate server');
-	throw new Error('Cookie Session Secret is missing, cannot initiate server');
-}
+// * Config
+import environmentVariables from './config/env.config';
 
 // ! Express Server
 
@@ -50,9 +37,9 @@ app.set('views', './src/views/pages');
 // Express Session
 app.use(
 	session({
-		secret: process.env.COOKIE_SESSION_SECRET,
+		secret: environmentVariables.COOKIE_SESSION_SECRET,
 		store: mongoStore.create({
-			mongoUrl: process.env.MONGO_URI,
+			mongoUrl: environmentVariables.MONGODB_URI,
 		}),
 		cookie: {
 			httpOnly: false,
@@ -89,7 +76,7 @@ if (cluster.isPrimary) {
 		logger.info(`Worker [PID: ${worker.process.pid}] died`);
 	});
 } else {
-	app.listen(process.env.PORT, () => {
-		logger.info(`Express Server in Worker [PID: ${process.pid}] is running on port ${process.env.PORT}`);
+	app.listen(environmentVariables.PORT, () => {
+		logger.info(`Express Server in Worker [PID: ${process.pid}] is running on port ${environmentVariables.PORT}`);
 	});
 }

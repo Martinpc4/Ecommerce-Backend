@@ -2,6 +2,8 @@
 // * Modules
 import winston from 'winston';
 import { AbstractConfigSetLevels } from 'winston/lib/winston/config';
+// * Config
+import env from '../config/env.config';
 
 // ! Logger
 const { createLogger, format, transports } = winston;
@@ -18,7 +20,7 @@ function buildProdLogger() {
 	};
 
 	const ProdLogger = createLogger({
-		level: process.env.LOGGER_LEVEL || 'trace',
+		level: env.LOGGER_LEVEL || 'trace',
 		levels: logLevels,
 		format: format.combine(format.timestamp({ format: 'DD-MM-YYYY HH:mm:ss' }), format.errors({ stack: true })),
 		transports: [

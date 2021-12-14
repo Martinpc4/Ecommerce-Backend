@@ -7,8 +7,8 @@ import {
 	linkedAccountsPropertiesInterface,
 	phonePropertiesInterface,
 } from '../interfaces/users.interfaces';
-// * Utils
-import mongoose from '../utils/mongodb';
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Class
 class UserClass {

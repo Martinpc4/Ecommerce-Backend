@@ -3,12 +3,12 @@
 import { Request, Response, Router } from 'express';
 import multer from 'multer';
 import path from 'path';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 // * Controllers
 import UsersController from '../controllers/user.controller';
-// * Utils
-import mongoose from '../utils/mongodb';
-// * Middlewares
-import isAuthenticated from '../middlewares/isAuthenticated.middleware';
+// * Config
+import mongoose from '../config/mongodb.config';
+import env from '../config/env.config';
 // * Auth Strategies
 import passport from '../auth/passport.auth';
 // * Loggers
@@ -66,6 +66,7 @@ AUTH.post('/:userId/verify_email/:verificationCode', async (req: Request, res: R
 	}
 });
 //  Log In
+// TODO REMOVE
 AUTH.get('/login', (req: Request, res: Response) => {
 	try {
 		res.render('login_form');
@@ -80,12 +81,14 @@ AUTH.get('/login', (req: Request, res: Response) => {
 		res.status(500).send('Internal Server Error');
 	}
 });
+// TODO REMOVE
 AUTH.get('/logout', (req: Request, res: Response) => {
 	req.session.destroy((err) => {
 		throw new Error();
 	});
-	res.status(200).redirect(process.env.HOME_ROUTE !== undefined ? process.env.HOME_ROUTE : '/');
+	res.status(200).redirect(env.HOME_ROUTE);
 });
+// TODO REMOVE
 AUTH.get('/faillogin', (req: Request, res: Response) => {
 	try {
 		logger.notice({
@@ -94,7 +97,7 @@ AUTH.get('/faillogin', (req: Request, res: Response) => {
 			method: 'GET',
 			route: '/faillogin',
 		});
-		res.render('fail_login');
+		res.status(401).send('Unauthorized');
 	} catch (err) {
 		logger.error({
 			message: 'Login Fail form failure',
@@ -112,7 +115,17 @@ AUTH.post(
 		failureRedirect: '/auth/faillogin',
 	}),
 	(req: Request, res: Response) => {
-		res.status(200).redirect(process.env.HOME_ROUTE !== undefined ? process.env.HOME_ROUTE : '/');
+		if (req.user === undefined) {
+			throw new Error('Internal Server Error');
+		}
+		const token: string = jwt.sign(
+			{
+				data: JSON.stringify(req.user),
+			},
+			env.JWT_SECRET,
+			{ expiresIn: 60 * 60 }
+		);
+		res.status(200).json({token});
 	}
 );
 
@@ -167,7 +180,7 @@ AUTH.post(
 	}).single('avatarPhoto'),
 	passport.authenticate('signup', { failureRedirect: '/auth/failsignup' }),
 	(req: Request, res: Response) => {
-		res.status(200).redirect(`${process.env.HOME_ROUTE}`);
+		res.status(200).redirect(`${env.HOME_ROUTE}`);
 	}
 );
 
@@ -177,7 +190,7 @@ AUTH.get(
 	'/facebook/callback',
 	passport.authenticate('facebook', { failureRedirect: '/auth/faillogin' }),
 	(req: Request, res: Response) => {
-		res.status(200).redirect(`${process.env.HOME_ROUTE}`);
+		res.status(200).redirect(`${env.HOME_ROUTE}`);
 	}
 );
 
@@ -188,7 +201,7 @@ AUTH.get(
 	'/github/callback',
 	passport.authenticate('github', { failureRedirect: '/auth/faillogin' }),
 	(req: Request, res: Response) => {
-		res.status(200).redirect(`${process.env.HOME_ROUTE}`);
+		res.status(200).redirect(`${env.HOME_ROUTE}`);
 	}
 );
 

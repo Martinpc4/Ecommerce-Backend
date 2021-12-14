@@ -43,7 +43,7 @@ MAIN.get('/info', (req: Request, res: Response) => {
 		});
 	}
 });
-MAIN.get('/dashboard', isAuthenticated, async (req: Request, res: Response) => {
+MAIN.get('/dashboard', async (req: Request, res: Response) => {
 	if (req.user !== undefined) {
 		const userData: any = req.user;
 

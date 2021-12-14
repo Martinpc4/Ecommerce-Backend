@@ -1,6 +1,6 @@
 // ! Imports
-// * Utils
-import mongoose from '../utils/mongodb';
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Interface
 interface receiptPropertiesInterface {

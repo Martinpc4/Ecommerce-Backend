@@ -1,6 +1,6 @@
 // ! Imports
-// * Utils
-import mongoose from '../utils/mongodb';
+// * Config
+import mongoose from '../config/mongodb.config';
 
 // ! Interfaces
 interface userPropertiesInterface {
@@ -22,7 +22,7 @@ interface emailPropertiesInterface {
 }
 interface linkedAccountsPropertiesInterface {
 	facebook: string | null;
-	github: string | null
+	github: string | null;
 }
 interface phonePropertiesInterface {
 	extension: number;
@@ -38,4 +38,10 @@ interface addressPropertiesInterface {
 }
 
 // ! Exports
-export {addressPropertiesInterface, phonePropertiesInterface, linkedAccountsPropertiesInterface, emailPropertiesInterface, userPropertiesInterface};
+export {
+	addressPropertiesInterface,
+	phonePropertiesInterface,
+	linkedAccountsPropertiesInterface,
+	emailPropertiesInterface,
+	userPropertiesInterface,
+};

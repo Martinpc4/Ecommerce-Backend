@@ -5,12 +5,13 @@ import { Request, Response, Router } from 'express';
 import ProductsController from '../controllers/product.controller';
 // * Models
 import ProductModel from '../models/products.model';
-// * Utils
-import mongoose from '../utils/mongodb';
+// * Config
+import mongoose from '../config/mongodb.config';
 // * Loggers
 import logger from '../logs/index.logs';
 // * Middlewares
 import isAdmin from '../middlewares/isAdmin.middleware';
+import isAuthenticated from '../middlewares/isAuthenticated.middleware';
 
 // ! Route Definition
 
@@ -71,7 +72,7 @@ API.get('/products/category/:categoryId', async (req: Request, res: Response) =>
 });
 API.get('/products/:productId', async (req: Request, res: Response) => {
 	try {
-		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.id);
+		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
 		if ((await ProductsController.exists(productId)) === false) {
 			logger.notice({
 				router: 'API',

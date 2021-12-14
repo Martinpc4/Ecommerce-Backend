@@ -9,10 +9,11 @@ import { ReceiptClass } from '../classes/receipts.class';
 import { CartClass } from '../classes/carts.classes';
 // * Models
 import ReceiptsModel from '../models/receips.model';
-// * Utils
-import mongoose from '../utils/mongodb';
-import { adminMail, etherealTransporter, mailOptions } from '../utils/ethereal.mails';
-import { twilioClient, messagesOptions, adminPhoneNumber } from '../utils/twilio.messages';
+// * Config
+import mongoose from '../config/mongodb.config';
+import { adminMail, etherealTransporter, mailOptions } from '../config/ethereal.config';
+import { twilioClient, messagesOptions, adminPhoneNumber } from '../config/twilio.config';
+import env from '../config/env.config';
 
 // ! Controller
 class ReceiptController {
@@ -72,7 +73,7 @@ class ReceiptController {
 				subject: 'Import BA - Receipt',
 				html: String(
 					await ejs.renderFile(__dirname.replace('dist/controllers', 'src/views/pages/receipt.ejs'), {
-						serverAddress: process.env.SERVER_ADDRESS,
+						serverAddress: env.SERVER_ADDRESS,
 						receiptId: receiptInstance._id,
 						products: cartInstance.products,
 						total: cartInstance.total,
@@ -85,7 +86,7 @@ class ReceiptController {
 				subject: '[Import BA] - New Purchase',
 				html: String(
 					await ejs.renderFile(__dirname.replace('dist/controllers', 'src/views/pages/receipt.ejs'), {
-						serverAddress: process.env.SERVER_ADDRESS,
+						serverAddress: env.SERVER_ADDRESS,
 						receiptId: receiptInstance._id,
 						products: cartInstance.products,
 						total: cartInstance.total,

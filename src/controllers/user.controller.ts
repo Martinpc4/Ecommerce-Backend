@@ -7,9 +7,10 @@ import { UserClass } from '../classes/users.classes';
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
 // * Models
 import UsersModel from '../models/users.model';
-// * Utils
-import mongoose from '../utils/mongodb';
-import { etherealTransporter, mailOptions } from '../utils/ethereal.mails';
+// * Config
+import mongoose from '../config/mongodb.config';
+import { etherealTransporter, mailOptions } from '../config/ethereal.config';
+import env from '../config/env.config';
 
 // ! Controller
 class UserControllerClass {
@@ -55,7 +56,7 @@ class UserControllerClass {
 						await ejs.renderFile(
 							__dirname.replace('dist/controllers', 'src/views/pages/email_verification.ejs'),
 							{
-								serverAddress: process.env.SERVER_ADDRESS,
+								serverAddress: env.SERVER_ADDRESS,
 								emailVerificationCode: String(userProperties.email.verification_code),
 							}
 						)
