@@ -11,7 +11,6 @@ import mongoose from '../config/mongodb.config';
 import logger from '../logs/index.logs';
 // * Middlewares
 import isAdmin from '../middlewares/isAdmin.middleware';
-import isAuthenticated from '../middlewares/isAuthenticated.middleware';
 
 // ! Route Definition
 

@@ -60,20 +60,6 @@ if (
 ) {
 	throw new Error('Nodemailer Development credentials are not defined');
 }
-if (
-	process.env.TWILIO_ACCOUNT_ID_PROD === undefined ||
-	process.env.TWILIO_AUTH_TOKEN_PROD === undefined ||
-	process.env.TWILIO_MESSAGING_SERVICE_ID_PROD === undefined
-) {
-	throw new Error('Twilio Production credentials are not defined');
-}
-if (
-	process.env.TWILIO_ACCOUNT_ID_DEV === undefined ||
-	process.env.TWILIO_AUTH_TOKEN_DEV === undefined ||
-	process.env.TWILIO_MESSAGING_SERVICE_ID_DEV === undefined
-) {
-	throw new Error('Twilio Development credentials are not defined');
-}
 
 // * Object Contruction
 const environmentVariables = {
@@ -103,13 +89,6 @@ const environmentVariables = {
 	NODEMAILER_USER_DEV: process.env.NODEMAILER_USER_DEV,
 	NODEMAILER_PASSWORD_DEV: process.env.NODEMAILER_PASSWORD_DEV,
 	NODEMAILER_HOST_DEV: process.env.NODEMAILER_HOST_DEV,
-	// Twilio Varaibles
-	TWILIO_ACCOUNT_ID_PROD: process.env.TWILIO_ACCOUNT_ID_PROD,
-	TWILIO_AUTH_TOKEN_PROD: process.env.TWILIO_AUTH_TOKEN_PROD,
-	TWILIO_MESSAGING_SERVICE_ID_PROD: process.env.TWILIO_MESSAGING_SERVICE_ID_PROD,
-	TWILIO_ACCOUNT_ID_DEV: process.env.TWILIO_ACCOUNT_ID_DEV,
-	TWILIO_AUTH_TOKEN_DEV: process.env.TWILIO_AUTH_TOKEN_DEV,
-	TWILIO_MESSAGING_SERVICE_ID_DEV: process.env.TWILIO_MESSAGING_SERVICE_ID_DEV,
 };
 
 // ! Exports

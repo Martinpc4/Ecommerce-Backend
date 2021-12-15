@@ -12,7 +12,6 @@ import ReceiptsModel from '../models/receips.model';
 // * Config
 import mongoose from '../config/mongodb.config';
 import { adminMail, etherealTransporter, mailOptions } from '../config/ethereal.config';
-import { twilioClient, messagesOptions, adminPhoneNumber } from '../config/twilio.config';
 import env from '../config/env.config';
 
 // ! Controller
@@ -46,27 +45,13 @@ class ReceiptController {
 		});
 
 		const receiptDocument: mongoose.Document = new ReceiptsModel(receiptInstance);
-
+		
 		receiptDocument.save();
-
+		
 		await UsersController.linkCartToUserById(userId, null);
 		await CartsController.deactivateCart(cartInstance._id);
 
 		if (!(await UsersController.existsCartLinkedById(userId)) && (await this.exists(receiptInstance._id))) {
-			await twilioClient.messages.create({
-				...messagesOptions,
-				to: `+${(await UsersController.getUserById(userId)).phoneNumber.extension}${
-					(
-						await UsersController.getUserById(userId)
-					).phoneNumber.number
-				}`,
-				body: `Your order has been placed. Your order id is ${receiptInstance._id}`,
-			});
-			await twilioClient.messages.create({
-				...messagesOptions,
-				to: `${adminPhoneNumber}`,
-				body: `An order has been placed. The Receipt [_id: ${receiptInstance._id}] total is ${receiptInstance.total}`,
-			});
 			await etherealTransporter.sendMail({
 				...mailOptions,
 				to: (await UsersController.getUserById(userId)).email.email,

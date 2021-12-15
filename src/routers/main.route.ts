@@ -1,13 +1,8 @@
 // ! Imports
 // * Modules
 import { Request, Response, Router } from 'express';
-// * Controllers
-import ProductsController from '../controllers/product.controller';
-import CartsController from '../controllers/cart.controller';
 // * Loggers
 import logger from '../logs/index.logs';
-// * Middlewares
-import isAuthenticated from '../middlewares/isAuthenticated.middleware';
 
 // ! Route Definition
 
@@ -41,19 +36,6 @@ MAIN.get('/info', (req: Request, res: Response) => {
 			route: `/info`,
 			stack: err,
 		});
-	}
-});
-MAIN.get('/dashboard', async (req: Request, res: Response) => {
-	if (req.user !== undefined) {
-		const userData: any = req.user;
-
-		let dashboardData: {} = {
-			products: await ProductsController.getAll(),
-			user: userData,
-			cartProducts: userData.cartId !== null ? await CartsController.getAllProductsFromCartById(userData.cartId) : null,
-			cartId: userData.cartId,
-		}; 
-		res.render('dashboard', dashboardData);
 	}
 });
 

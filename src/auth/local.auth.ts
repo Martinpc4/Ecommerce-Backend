@@ -16,11 +16,9 @@ import mongoose from '../config/mongodb.config';
 
 // ! Local Strategy
 const SignupLocalStrategy = new LStrategy(
-	{ passReqToCallback: true, passwordField: 'password', usernameField: 'username' },
+	{ passReqToCallback: true, passwordField: 'password', usernameField: 'email' },
 	async (req: Request, username: string, password: string, done: any): Promise<void> => {
 		try {
-			console.log(username);
-			console.log(password);
 			if (await UsersController.isUserByUsername(username)) {
 				done(null, false); // User Found in Database
 			} else {
@@ -85,21 +83,24 @@ const SignupLocalStrategy = new LStrategy(
 	}
 );
 
-const LoginLocalStrategy = new LStrategy(async (username, password, done) => {
-	const userData = await UserModel.findOne({
-		'email.email': { $eq: username },
-	});
+const LoginLocalStrategy = new LStrategy(
+	{ passReqToCallback: false, passwordField: 'password', usernameField: 'username' },
+	async (username, password, done: any) => {
+		const userData: userPropertiesInterface | null = await UserModel.findOne({
+			'email.email': { $eq: username },
+		});
 
-	if (userData === null) {
-		return done(null, false);
+		if (userData === null) {
+			return done(null, false);
+		}
+		
+		if (!(await bcrypt.compare(password, userData.password))) {
+			return done(null, false);
+		} else {
+			return done(null, userData);
+		}
 	}
-
-	if (!(await bcrypt.compare(password, userData.password))) {
-		return done(null, false);
-	} else {
-		return done(null, userData);
-	}
-});
+);
 
 // ! Exports
 export { LoginLocalStrategy, SignupLocalStrategy };

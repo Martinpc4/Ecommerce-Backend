@@ -119,6 +119,18 @@ class UserControllerClass {
 			throw new Error(`\n"getUserByUsername" Error: ${err}`);
 		}
 	}
+	async updateUser(userId: mongoose.Types.ObjectId, userInstance: UserClass): Promise<boolean> {
+		try {
+			if (await this.isUserById(userId)) {
+				await UsersModel.findByIdAndUpdate(userId, userInstance);
+				return true;
+			} else {
+				throw new Error('Update user request failed: user not found');
+			}
+		} catch (err) {
+			throw new Error(`\n"updateUser" Error: ${err}`);
+		}
+	}
 	// User's Cart Methods
 	async existsCartLinkedById(userId: mongoose.Types.ObjectId): Promise<mongoose.Types.ObjectId | null> {
 		try {

@@ -14,6 +14,7 @@ import API from './routers/api.route';
 import CART from './routers/cart.route';
 import AUTH from './routers/auth.route';
 import MAIN from './routers/main.route';
+import USER from './routers/user.route';
 // * Config
 import environmentVariables from './config/env.config';
 
@@ -64,6 +65,7 @@ app.use('/', MAIN);
 app.use('/api', API);
 app.use('/api/carts', CART);
 app.use('/auth', AUTH);
+app.use('/users', USER);
 
 // ! Clusters & Express Servers Initialization
 

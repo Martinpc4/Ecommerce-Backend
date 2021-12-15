@@ -85,7 +85,7 @@ class CartControllerClass {
 			total: 0,
 			state: true,
 		});
-
+		
 		const cartDocument: mongoose.Document = new CartsModel(newCartInstance);
 
 		await cartDocument.save();
@@ -115,7 +115,8 @@ class CartControllerClass {
 	async getAllProductsFromCartById(cartId: mongoose.Types.ObjectId): Promise<cartProductsInterface[]> {
 		const cartDocument: cartPropertiesInterface | null = await CartsModel.findById(cartId);
 		if (cartDocument !== null) {
-			return cartDocument.products;
+			const cartInstance: CartClass = new CartClass(cartDocument);
+			return cartInstance.products;
 		}
 		throw new Error('Internal server errror');
 	}

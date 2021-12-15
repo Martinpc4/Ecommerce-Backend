@@ -22,6 +22,67 @@ const AUTH: Router = Router();
 // ! Routes
 
 // * Local Auth
+//  Log In
+AUTH.post(
+	'/login',
+	passport.authenticate('login', {
+		failureRedirect: '/auth/faillogin',
+	}),
+	(req: Request, res: Response) => {
+		if (req.user === undefined) {
+			res.status(401).send('Unauthorized');
+		}
+		const token: string = jwt.sign(
+			{
+				data: JSON.stringify(req.user),
+			},
+			env.JWT_SECRET,
+			{ expiresIn: env.JWT_EXPIRY }
+		);
+		res.status(200).json({ token });
+	}
+);
+AUTH.get('/faillogin', (req: Request, res: Response) => {
+	res.status(401).send('Invalid Credentials');
+});
+
+// Sign Up
+AUTH.post(
+	'/signup',
+	multer({
+		storage: multer.diskStorage({
+			destination: path.join(__dirname, '../../public/images/avatars/profile'),
+			filename: (req: Request, file, cb) => {
+				if (file.mimetype !== 'image/png' && file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/jpg') {
+					return cb(new Error('Only PNG, JPG and JPEG are allowed'), null);
+				}
+				cb(null, `${req.body.email}.jpg`);
+			},
+		}),
+		dest: path.join(__dirname, '../../public/images/avatars/profile'),
+	}).single('avatarPhoto'), (req, res, next) => {
+		console.log(req.body);
+		next();
+	},
+	passport.authenticate('signup', { failureRedirect: '/auth/failsignup' }),
+	(req: Request, res: Response) => {
+		if (req.user === undefined) {
+			res.status(401).send('Unauthorized');
+		}
+		const token: string = jwt.sign(
+			{
+				data: JSON.stringify(req.user),
+			},
+			env.JWT_SECRET,
+			{ expiresIn: env.JWT_EXPIRY }
+		);
+		res.status(200).json({ token });
+	}
+);
+AUTH.get('/failsignup', (req: Request, res: Response) => {
+	res.status(400).send('Error creating a user');
+});
+
 // Email Verification
 AUTH.post('/:userId/verify_email/:verificationCode', async (req: Request, res: Response) => {
 	try {
@@ -65,124 +126,6 @@ AUTH.post('/:userId/verify_email/:verificationCode', async (req: Request, res: R
 		res.status(500).json({ success: false, message: 'Internal Server Error', stack: err });
 	}
 });
-//  Log In
-// TODO REMOVE
-AUTH.get('/login', (req: Request, res: Response) => {
-	try {
-		res.render('login_form');
-	} catch (err) {
-		logger.error({
-			message: 'Login form failure',
-			router: 'AUTH',
-			method: 'GET',
-			route: '/login',
-			stack: err,
-		});
-		res.status(500).send('Internal Server Error');
-	}
-});
-// TODO REMOVE
-AUTH.get('/logout', (req: Request, res: Response) => {
-	req.session.destroy((err) => {
-		throw new Error();
-	});
-	res.status(200).redirect(env.HOME_ROUTE);
-});
-// TODO REMOVE
-AUTH.get('/faillogin', (req: Request, res: Response) => {
-	try {
-		logger.notice({
-			message: 'Login form failure',
-			router: 'AUTH',
-			method: 'GET',
-			route: '/faillogin',
-		});
-		res.status(401).send('Unauthorized');
-	} catch (err) {
-		logger.error({
-			message: 'Login Fail form failure',
-			router: 'AUTH',
-			method: 'GET',
-			route: '/faillogin',
-			stack: err,
-		});
-		res.status(500).send('Internal Server Error');
-	}
-});
-AUTH.post(
-	'/login',
-	passport.authenticate('login', {
-		failureRedirect: '/auth/faillogin',
-	}),
-	(req: Request, res: Response) => {
-		if (req.user === undefined) {
-			throw new Error('Internal Server Error');
-		}
-		const token: string = jwt.sign(
-			{
-				data: JSON.stringify(req.user),
-			},
-			env.JWT_SECRET,
-			{ expiresIn: 60 * 60 }
-		);
-		res.status(200).json({token});
-	}
-);
-
-// Sign Up
-AUTH.get('/signup', (req: Request, res: Response) => {
-	try {
-		res.render('signup_form');
-	} catch (err) {
-		logger.error({
-			message: 'Signup form failure',
-			router: 'AUTH',
-			method: 'GET',
-			route: '/signup',
-			stack: err,
-		});
-		res.status(500).send('Internal Server Error');
-	}
-});
-AUTH.get('/failsignup', (req: Request, res: Response) => {
-	try {
-		logger.notice({
-			message: 'Signup form failure',
-			router: 'AUTH',
-			method: 'GET',
-			route: '/failsignup',
-		});
-		res.render('fail_signup');
-	} catch (err) {
-		logger.error({
-			message: 'Signup Fail form failure',
-			router: 'AUTH',
-			method: 'GET',
-			route: '/failsignup',
-			stack: err,
-		});
-		res.status(500).send('Internal Server Error');
-	}
-});
-AUTH.post(
-	'/signup',
-	multer({
-		storage: multer.diskStorage({
-			destination: path.join(__dirname, '../../public/images/avatars/profile'),
-			filename: (req: Request, file, cb) => {
-				if (file.mimetype !== 'image/png' && file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/jpg') {
-					return cb(new Error('Only PNG, JPG and JPEG are allowed'), null);
-				}
-				cb(null, `${req.body.email}.jpg`);
-			},
-		}),
-		dest: path.join(__dirname, '../../public/images/avatars/profile'),
-	}).single('avatarPhoto'),
-	passport.authenticate('signup', { failureRedirect: '/auth/failsignup' }),
-	(req: Request, res: Response) => {
-		res.status(200).redirect(`${env.HOME_ROUTE}`);
-	}
-);
 
 // * Facebook Auth
 AUTH.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
