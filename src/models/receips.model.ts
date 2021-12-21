@@ -1,10 +1,10 @@
 // ! Imports
-// * Interfaces
+// * Types
 import { receiptPropertiesInterface } from '../interfaces/receipt.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Model's Schema
+// ! Model's Schema Defintion
 const receiptSchema: mongoose.Schema = new mongoose.Schema<receiptPropertiesInterface>({
 	_id: { type: mongoose.SchemaTypes.ObjectId, required: true },
 	userId: { type: mongoose.SchemaTypes.ObjectId, required: true },

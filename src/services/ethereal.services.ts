@@ -2,8 +2,8 @@
 // * Modules
 import nodemailer, { Transporter } from 'nodemailer';
 import { MailOptions } from 'nodemailer/lib/sendmail-transport';
-// * Config
-import env from './env.config';
+// * Utils
+import env from '../utils/env.utils';
 
 // ! Service's Variables
 const adminMail: string = 'adminMail@mail.com';

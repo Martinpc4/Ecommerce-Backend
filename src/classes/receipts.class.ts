@@ -1,10 +1,10 @@
 // ! Imports
-// * Interfaces
+// * Types
 import { receiptPropertiesInterface } from '../interfaces/receipt.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Class
+// ! Class Definition
 class ReceiptClass {
 	_id: mongoose.Types.ObjectId;
 	cartId: mongoose.Types.ObjectId;

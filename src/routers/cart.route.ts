@@ -1,22 +1,22 @@
 // ! Imports
 // * Modules
 import { Request, Response, Router } from 'express';
+// * Authentication
+import passport from '../auth/passport.auth';
+// * Classes
+import { CartProductClass } from '../classes/products.classes';
+import { ReceiptClass } from '../classes/receipts.class';
 // * Controllers
 import CartsController from '../controllers/cart.controller';
 import ProductsController from '../controllers/product.controller';
 import ReceiptsController from '../controllers/receipt.controller';
 import UsersController from '../controllers/user.controller';
-// * Classes
-import { CartProductClass } from '../classes/products.classes';
-import { ReceiptClass } from '../classes/receipts.class';
-// * Interfaces
+// * Types
 import { cartProductsInterface } from '../interfaces/products.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
 // * Loggers
 import logger from '../logs/index.logs';
-// * Middlewares
-import isAuthenticated from '../middlewares/isAuthenticated.middleware';
+// * Services
+import mongoose from '../services/mongodb.services';
 
 // ! Route Definition
 
@@ -25,7 +25,7 @@ const CART: Router = Router();
 
 // * CART Routes
 // Create new cart
-CART.post('/', isAuthenticated, async (req: Request, res: Response) => {
+CART.post('/', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	let errorMessages: string[] = [];
 	try {
 		if (req.body === undefined) {
@@ -42,7 +42,7 @@ CART.post('/', isAuthenticated, async (req: Request, res: Response) => {
 				throw new Error('Internal Server Error: Unauthorized user access');
 			}
 			if (
-				(await UsersController.isUserById(userInstance._id)) === true &&
+				(await UsersController.existsById(userInstance._id)) === true &&
 				(await UsersController.existsCartLinkedById(userInstance._id)) === null
 			) {
 				const userProductsNotValidated: cartProductsInterface[] = req.body.userProducts;
@@ -99,7 +99,7 @@ CART.post('/', isAuthenticated, async (req: Request, res: Response) => {
 	}
 });
 // Delete a cart
-CART.delete('/', isAuthenticated, async (req: Request, res: Response) => {
+CART.delete('/', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
@@ -117,6 +117,7 @@ CART.delete('/', isAuthenticated, async (req: Request, res: Response) => {
 				});
 				res.status(200).json({ success: true });
 			} else {
+				console.log(125);
 				logger.notice({
 					message: `Cart (id: ${userInstance.cartId}) could not be deleted`,
 					router: 'CART',
@@ -152,7 +153,7 @@ CART.delete('/', isAuthenticated, async (req: Request, res: Response) => {
 	}
 });
 // Get all products from a cart
-CART.get('/products', isAuthenticated, async (req: Request, res: Response) => {
+CART.get('/products', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
@@ -193,80 +194,84 @@ CART.get('/products', isAuthenticated, async (req: Request, res: Response) => {
 	}
 });
 // Modify products in a Cart
-CART.put('/products/:productId', isAuthenticated, async (req: Request, res: Response) => {
-	const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
-	const userProduct: cartProductsInterface = new CartProductClass(req.body);
-	try {
-		const userInstance: any | undefined = req.user;
-		if (userInstance === undefined) {
-			throw new Error('Internal Server Error: Unauthorized user access');
-		}
-		if (await CartsController.exists(userInstance.cartId)) {
-			const flagVar: boolean = await ProductsController.isValidProduct(userProduct);
-			if (flagVar) {
-				const flagVar: boolean = await CartsController.modifyProductInCartById(
-					userInstance.cartId,
-					userProduct._id,
-					userProduct.color,
-					userProduct.memory,
-					userProduct.amount
-				);
+CART.put(
+	'/products/:productId',
+	passport.authenticate('jwt', { session: false }),
+	async (req: Request, res: Response) => {
+		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
+		const userProduct: cartProductsInterface = new CartProductClass(req.body);
+		try {
+			const userInstance: any | undefined = req.user;
+			if (userInstance === undefined) {
+				throw new Error('Internal Server Error: Unauthorized user access');
+			}
+			if (await CartsController.exists(userInstance.cartId)) {
+				const flagVar: boolean = await ProductsController.isValidProduct(userProduct);
 				if (flagVar) {
-					logger.http({
-						message: `Product [_id: ${productId}] has been modified to Cart [_id: ${userInstance.cartId}]`,
-						router: 'CART',
-						method: 'PUT',
-						route: '/:cartId/products/:productId',
-					});
-					res.status(200).json({
-						success: true,
-						message: `Product [_id: ${productId}] has been modified to Cart [_id: ${userInstance.cartId}]`,
-					});
-				} else {
-					logger.error({
-						message: `Product [_id: ${productId}] modification to cart [_id: ${userInstance.cartId}] failed`,
-						router: 'CART',
-						method: 'PUT',
-						route: '/:cartId/products/:productId',
-					});
-					res.status(500).send(
-						`Product [_id: ${productId}] modification to cart [_id: ${userInstance.cartId}] failed`
+					const flagVar: boolean = await CartsController.modifyProductInCartById(
+						userInstance.cartId,
+						userProduct._id,
+						userProduct.color,
+						userProduct.memory,
+						userProduct.amount
 					);
+					if (flagVar) {
+						logger.http({
+							message: `Product [_id: ${productId}] has been modified to Cart [_id: ${userInstance.cartId}]`,
+							router: 'CART',
+							method: 'PUT',
+							route: '/:cartId/products/:productId',
+						});
+						res.status(200).json({
+							success: true,
+							message: `Product [_id: ${productId}] has been modified to Cart [_id: ${userInstance.cartId}]`,
+						});
+					} else {
+						logger.error({
+							message: `Product [_id: ${productId}] modification to cart [_id: ${userInstance.cartId}] failed`,
+							router: 'CART',
+							method: 'PUT',
+							route: '/:cartId/products/:productId',
+						});
+						res.status(500).send(
+							`Product [_id: ${productId}] modification to cart [_id: ${userInstance.cartId}] failed`
+						);
+					}
+				} else {
+					logger.notice({
+						message: '[POST] Product is not valid',
+						router: 'CART',
+						method: 'PUT',
+						route: '/:cartId/products/:productId',
+					});
+					res.status(404).json({
+						success: false,
+						message: '[POST] Product is not valid',
+					});
 				}
 			} else {
 				logger.notice({
-					message: '[POST] Product is not valid',
+					message: `[POST] Cart [_id: ${userInstance.cartId}] was not found`,
 					router: 'CART',
 					method: 'PUT',
 					route: '/:cartId/products/:productId',
 				});
-				res.status(404).json({
-					success: false,
-					message: '[POST] Product is not valid',
-				});
+				res.status(404).send(`[POST] Cart [_id: ${userInstance.cartId}] was not found`);
 			}
-		} else {
-			logger.notice({
-				message: `[POST] Cart [_id: ${userInstance.cartId}] was not found`,
+		} catch (err) {
+			logger.error({
+				message: `Product [_id: ${productId}] modification to cart failed`,
 				router: 'CART',
 				method: 'PUT',
 				route: '/:cartId/products/:productId',
+				stack: err,
 			});
-			res.status(404).send(`[POST] Cart [_id: ${userInstance.cartId}] was not found`);
+			res.status(500).send(`Product [_id: ${productId}] modification to cart failed\n\n${err}`);
 		}
-	} catch (err) {
-		logger.error({
-			message: `Product [_id: ${productId}] modification to cart failed`,
-			router: 'CART',
-			method: 'PUT',
-			route: '/:cartId/products/:productId',
-			stack: err,
-		});
-		res.status(500).send(`Product [_id: ${productId}] modification to cart failed\n\n${err}`);
 	}
-});
+);
 // Add a Product to Cart
-CART.post('/products', isAuthenticated, async (req: Request, res: Response) => {
+CART.post('/products', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
@@ -353,102 +358,110 @@ CART.post('/products', isAuthenticated, async (req: Request, res: Response) => {
 	}
 });
 // Delete a Product from Cart
-CART.delete('/products/:productId', isAuthenticated, async (req: Request, res: Response) => {
-	try {
-		const userInstance: any | undefined = req.user;
-		if (userInstance === undefined) {
-			throw new Error('Internal Server Error: Unauthorized user access');
-		}
-		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
-		if ((await CartsController.exists(userInstance.cartId)) && (await ProductsController.exists(productId))) {
-			if (req.body.color === undefined || req.body.memory === undefined) {
-				res.status(500).json({
-					success: false,
-					message: `[DELTE] Not enough data to delete product from cart`,
-				});
-			} else {
-				if (
-					!(await CartsController.isProductInCartById(
-						userInstance.cartId,
-						productId,
-						req.body.color,
-						req.body.memory
-					))
-				) {
-					logger.notice({
-						message: `Product [id: ${productId}] does not exists in Cart [_id: ${userInstance.cartId}]`,
-						router: 'CART',
-						method: 'DELETE',
-						route: '/:cartId/products/:productId',
-					});
-					res.status(404).json({
+CART.delete(
+	'/products/:productId',
+	passport.authenticate('jwt', { session: false }),
+	async (req: Request, res: Response) => {
+		try {
+			const userInstance: any | undefined = req.user;
+			if (userInstance === undefined) {
+				throw new Error('Internal Server Error: Unauthorized user access');
+			}
+			const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
+			// TODO FINISH THIS
+			if (
+				(await CartsController.exists(userInstance.cartId)) &&
+				(await ProductsController.existsById(productId))
+			) {
+				if (req.body.color === undefined || req.body.memory === undefined) {
+					res.status(500).json({
 						success: false,
-						message: `Product [id: ${productId}] does not exists in Cart [_id: ${userInstance.cartId}]`,
+						message: `[DELTE] Not enough data to delete product from cart`,
 					});
 				} else {
-					const validatedProduct: CartProductClass = await ProductsController.getValidProduct(
-						productId,
-						req.body.amount,
-						req.body.color,
-						req.body.memory
-					);
-					const flagVar: boolean = await CartsController.removeProductFromCartById(
-						userInstance.cartId,
-						validatedProduct._id,
-						validatedProduct.color,
-						validatedProduct.memory
-					);
-
-					if (flagVar) {
+					if (
+						!(await CartsController.isProductInCartById(
+							userInstance.cartId,
+							productId,
+							req.body.color,
+							req.body.memory
+						))
+					) {
 						logger.notice({
-							message: `Product [_id: ${validatedProduct._id}] has been removed from Cart [_id: ${userInstance.cartId}]`,
+							message: `Product [id: ${productId}] does not exists in Cart [_id: ${userInstance.cartId}]`,
 							router: 'CART',
-							route: '/:cartId/products',
 							method: 'DELETE',
+							route: '/:cartId/products/:productId',
 						});
-						res.status(200).json({
-							success: true,
-							message: `Product [_id: ${validatedProduct._id}] has been removed from Cart [_id: ${userInstance.cartId}]`,
+						res.status(404).json({
+							success: false,
+							message: `Product [id: ${productId}] does not exists in Cart [_id: ${userInstance.cartId}]`,
 						});
 					} else {
-						logger.notice({
-							message: `Product [_id: ${validatedProduct._id}] was not removed from Cart [_id: ${userInstance.cartId}]`,
-							router: 'CART',
-							route: '/:cartId/products',
-							method: 'DELETE',
-						});
-						res.status(500).json({
-							success: false,
-							message: `Product [_id: ${validatedProduct._id}] was not removed from Cart [_id: ${userInstance.cartId}]`,
-						});
+						const validatedProduct: CartProductClass = await ProductsController.getValidProduct(
+							productId,
+							req.body.amount,
+							req.body.color,
+							req.body.memory
+						);
+						const flagVar: boolean = await CartsController.removeProductFromCartById(
+							userInstance.cartId,
+							validatedProduct._id,
+							validatedProduct.color,
+							validatedProduct.memory
+						);
+
+						if (flagVar) {
+							logger.notice({
+								message: `Product [_id: ${validatedProduct._id}] has been removed from Cart [_id: ${userInstance.cartId}]`,
+								router: 'CART',
+								route: '/:cartId/products',
+								method: 'DELETE',
+							});
+							res.status(200).json({
+								success: true,
+								message: `Product [_id: ${validatedProduct._id}] has been removed from Cart [_id: ${userInstance.cartId}]`,
+							});
+						} else {
+							logger.notice({
+								message: `Product [_id: ${validatedProduct._id}] was not removed from Cart [_id: ${userInstance.cartId}]`,
+								router: 'CART',
+								route: '/:cartId/products',
+								method: 'DELETE',
+							});
+							res.status(500).json({
+								success: false,
+								message: `Product [_id: ${validatedProduct._id}] was not removed from Cart [_id: ${userInstance.cartId}]`,
+							});
+						}
 					}
 				}
+			} else {
+				logger.notice({
+					message: `Cart [_id: ${userInstance.cartId}] or Product [_id: ${productId}] has not been found`,
+					router: 'CART',
+					route: '/:cartId/products/:productId',
+					method: 'DELETE',
+				});
+				res.status(404).json({
+					success: false,
+					message: `Cart [_id: ${userInstance.cartId}] or Product [_id: ${productId}] has not been found`,
+				});
 			}
-		} else {
-			logger.notice({
-				message: `Cart [_id: ${userInstance.cartId}] or Product [_id: ${productId}] has not been found`,
+		} catch (err) {
+			logger.error({
+				message: `Product removal from cart failed`,
 				router: 'CART',
-				route: '/:cartId/products/:productId',
 				method: 'DELETE',
+				route: '/:cartId/products/:productId',
+				stack: err,
 			});
-			res.status(404).json({
-				success: false,
-				message: `Cart [_id: ${userInstance.cartId}] or Product [_id: ${productId}] has not been found`,
-			});
+			res.status(500).send(`[DELTE] Delete product in Cart by Id:\n\n${err}`);
 		}
-	} catch (err) {
-		logger.error({
-			message: `Product removal from cart failed`,
-			router: 'CART',
-			method: 'DELETE',
-			route: '/:cartId/products/:productId',
-			stack: err,
-		});
-		res.status(500).send(`[DELTE] Delete product in Cart by Id:\n\n${err}`);
 	}
-});
+);
 // Checkout a Cart
-CART.post('/checkout', isAuthenticated, async (req: Request, res: Response) => {
+CART.post('/checkout', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
@@ -463,7 +476,6 @@ CART.post('/checkout', isAuthenticated, async (req: Request, res: Response) => {
 				userInstance.cartId,
 				userInstance._id
 			);
-			console.log(receiptInstance);
 			logger.http({
 				message: `Cart [_id: ${userInstance.cartId}] has been checked out`,
 				router: 'CART',

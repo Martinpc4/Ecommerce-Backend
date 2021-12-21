@@ -1,12 +1,14 @@
 {
     "name": "ecommerce-backend",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "description": "",
-    "main": "dist/main.js",
+    "main": "dist/bundle.js",
     "scripts": {
-        "build": "tsc",
-        "watch": "tsc",
-        "start": "nodemon ./dist/index.js"
+        "build-dev": "webpack --mode development",
+        "build-prod": "webpack --mode production",
+        "watch-dev": "webpack --mode development -w",
+        "watch-prod": "webpack --mode production -w",
+        "start-dev": "nodemon ./dist/index.js"
     },
     "keywords": [],
     "author": "Martín Pérez Cobo",
@@ -22,10 +24,8 @@
         "@types/passport": "^1.0.7",
         "@types/passport-facebook": "^2.1.11",
         "@types/passport-github2": "^1.2.5",
+        "@types/passport-jwt": "^3.0.6",
         "@types/passport-local": "^1.0.34",
-        "ts-loader": "^9.2.5",
-        "ts-node": "^10.3.0",
-        "tsc-node": "^0.0.3",
         "typescript": "4.4.3"
     },
     "dependencies": {
@@ -47,8 +47,13 @@
         "passport": "^0.5.0",
         "passport-facebook": "^3.0.0",
         "passport-github2": "^0.1.12",
+        "passport-jwt": "^4.0.0",
         "passport-local": "^1.0.0",
+        "ts-loader": "^9.2.6",
         "twilio": "^3.71.3",
+        "webpack": "^5.65.0",
+        "webpack-cli": "^4.9.1",
+        "webpack-node-externals": "^3.0.0",
         "winston": "^3.3.3"
     }
 }

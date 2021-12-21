@@ -1,8 +1,8 @@
 // ! Imports
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Interfaces
+// ! Interfaces Defintions
 interface idsInArrayMethodInterface {
 	state: boolean;
 	missingProductIds: mongoose.Types.ObjectId[];

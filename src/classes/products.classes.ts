@@ -1,14 +1,14 @@
 // ! Imports
-// * Controllers
+// * Types
 import {
 	productPropertiesInterface,
 	cartProductsInterface,
 	genericProductPropertiesInterface,
 } from '../interfaces/products.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Classes
+// ! Classes Defintions
 // * Generic Product Class
 class GenericProductClass {
 	_id: mongoose.Types.ObjectId;

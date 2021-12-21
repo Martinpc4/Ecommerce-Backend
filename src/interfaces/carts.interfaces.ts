@@ -1,10 +1,10 @@
 // ! Imports
 // * Modules
-import mongoose from '../config/mongodb.config';
-// * Interfaces
+import mongoose from '../services/mongodb.services';
+// * Types
 import { cartProductsInterface } from './products.interfaces';
 
-// ! Interfaces
+// ! Interface Definition
 interface cartPropertiesInterface {
 	_id: mongoose.Types.ObjectId;
 	userId: mongoose.Types.ObjectId;

@@ -1,41 +1,40 @@
 // ! Imports
 // * Classes
 import { ProductClass, CartProductClass } from '../classes/products.classes';
-// * Interfaces
+// * Data Access Objects
+import ProductsDAO from '../daos/products.daos';
+// * Types
 import {
 	productPropertiesInterface,
 	cartProductsInterface,
 	idsInArrayMethodInterface,
 } from '../interfaces/products.interfaces';
-// * Models
-import ProductsModel from '../models/products.model';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Controller
+// ! Controller Definition
 class ProductControllerClass {
 	constructor() {}
+	async existsById(productId: mongoose.Types.ObjectId): Promise<boolean> {
+		return await ProductsDAO.existsById(productId);
+	}
 	async isStockAvailable(productId: mongoose.Types.ObjectId, color: string, amount: number): Promise<boolean> {
-		const productData: productPropertiesInterface | null = await ProductsModel.findById(productId);
-		if (productData !== null) {
-			const colorIndex: number = productData.colors.indexOf(color);
-			if (productData.stock[colorIndex] >= amount) {
+		if (await ProductsDAO.existsById(productId)) {
+			const productData: ProductClass = await ProductsDAO.getById(productId);
+			if (productData.stock[productData.colors.indexOf(color)] >= amount) {
 				return true;
 			} else {
 				return false;
 			}
 		} else {
-			throw new Error('Product not found');
+			return false;
 		}
 	}
 	async isValidProduct(cartProductProperties: cartProductsInterface): Promise<boolean> {
-		if (await this.exists(cartProductProperties._id)) {
-			const productData: productPropertiesInterface | null = await ProductsModel.findById(
+		if (await ProductsDAO.existsById(cartProductProperties._id)) {
+			const productData: productPropertiesInterface | null = await ProductsDAO.getById(
 				cartProductProperties._id
 			);
-			if (productData === null) {
-				throw new Error('[ProductController] Validate Product: Internal Server Error');
-			}
 			if (productData.colors.indexOf(cartProductProperties.color) === -1) {
 				return false;
 			}
@@ -53,20 +52,13 @@ class ProductControllerClass {
 			return false;
 		}
 	}
-	async exists(productId: mongoose.Types.ObjectId): Promise<Boolean> {
-		if ((await ProductsModel.findById(productId)) !== null) {
-			return true;
-		} else {
-			return false;
-		}
-	}
 	async areIdsInDB(products: cartProductsInterface[]): Promise<idsInArrayMethodInterface> {
 		let flagVar: boolean = true;
 		let missingProductIds: mongoose.Types.ObjectId[] = [];
 		let withoutStock: mongoose.Types.ObjectId[] = [];
 
 		for await (const product of products) {
-			if (!(await this.exists(product._id))) {
+			if (!(await ProductsDAO.existsById(product._id))) {
 				flagVar = false;
 				missingProductIds = [...missingProductIds, product._id];
 			}
@@ -82,75 +74,47 @@ class ProductControllerClass {
 		productProperties._id = new mongoose.Types.ObjectId();
 		productProperties.timeStamp = new Date();
 
-		const newProduct: mongoose.Document = new ProductsModel(new ProductClass(productProperties));
-		const savedProduct: mongoose.Document = await newProduct.save();
+		const savedProductInstance: ProductClass = await ProductsDAO.save(new ProductClass(productProperties));
 
-		if (savedProduct !== null) {
-			return savedProduct._id;
+		if (await ProductsDAO.existsById(savedProductInstance._id)) {
+			return savedProductInstance._id;
 		} else {
-			throw new Error('There was an error saving the product in the DB');
+			throw new Error('The product was not saved correctly');
 		}
 	}
 	async getById(productId: mongoose.Types.ObjectId): Promise<ProductClass | null> {
-		const productFound: productPropertiesInterface | null = await ProductsModel.findById(productId);
-
-		if (productFound !== null) {
-			return new ProductClass(productFound);
+		if (await ProductsDAO.existsById(productId)) {
+			return await ProductsDAO.getById(productId);
+		} else {
+			return null;
 		}
-		return productFound;
 	}
 	async getCategoryById(categoryId: number): Promise<ProductClass[]> {
-		const categodyProducts: productPropertiesInterface[] | null = await ProductsModel.find({
-			categoryId: { $eq: categoryId },
-		});
-		if (categodyProducts === null) {
-			return [];
-		} else {
-			let products: ProductClass[] = [];
-			categodyProducts.forEach((productProperties) => {
-				products = [...products, new ProductClass(productProperties)];
-			});
-			return products;
-		}
+		const categoryProducts: ProductClass[] = await ProductsDAO.getByCategory(categoryId);
+		return categoryProducts;
 	}
 	async getAll(): Promise<ProductClass[]> {
-		let products: ProductClass[] = [];
-		const productsData: productPropertiesInterface[] = await ProductsModel.find({});
-
-		productsData.forEach((productProperties) => {
-			products = [...products, new ProductClass(productProperties)];
-		});
-
-		return products;
+		const productsData: ProductClass[] = await ProductsDAO.getAll();
+		return productsData;
 	}
 	async deleteById(productId: mongoose.Types.ObjectId): Promise<void> {
-		if ((await this.exists(productId)) == false) {
+		if (!(await ProductsDAO.existsById(productId))) {
 			throw new Error(`el producto con id${productId}, no fue encontrado`);
 		} else {
-			await ProductsModel.deleteOne({
-				_id: { $eq: productId },
-			});
+			await ProductsDAO.deleteById(productId);
 		}
 	}
 	async deleteAll(): Promise<void> {
-		await ProductsModel.deleteMany({});
+		await ProductsDAO.deleteAll();
 	}
 	async modifyById(
 		productId: mongoose.Types.ObjectId,
 		newProductProperties: productPropertiesInterface
-	): Promise<void> {
-		if ((await this.exists(productId)) == false) {
+	): Promise<ProductClass> {
+		if (!(await ProductsDAO.existsById(productId))) {
 			throw new Error(`el producto con id${productId}, no fue encontrado`);
 		} else {
-			const productFound: productPropertiesInterface | null = await ProductsModel.findById(productId);
-			if (productFound !== null) {
-				const productInstance: ProductClass = new ProductClass(productFound);
-
-				await ProductsModel.updateOne(
-					{ _id: productId },
-					{ $set: { ...productInstance, ...newProductProperties } }
-				);
-			}
+			return await ProductsDAO.updateById(productId, new ProductClass(newProductProperties));
 		}
 	}
 	async getValidProduct(
@@ -159,11 +123,8 @@ class ProductControllerClass {
 		color: string,
 		memory: number
 	): Promise<CartProductClass> {
-		if (await ProductsController.exists(productId)) {
-			const productDocument: ProductClass | null = await ProductsController.getById(productId);
-			if (productDocument === null) {
-				throw new Error('Internal server error');
-			}
+		if (await ProductsDAO.existsById(productId)) {
+			const productDocument: ProductClass = await ProductsDAO.getById(productId);
 
 			const validatedProduct: CartProductClass = new CartProductClass({
 				_id: productDocument._id,

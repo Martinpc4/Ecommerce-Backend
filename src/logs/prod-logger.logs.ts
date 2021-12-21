@@ -2,10 +2,10 @@
 // * Modules
 import winston from 'winston';
 import { AbstractConfigSetLevels } from 'winston/lib/winston/config';
-// * Config
-import env from '../config/env.config';
+// * Utils
+import env from '../utils/env.utils';
 
-// ! Logger
+// ! Logger Definition
 const { createLogger, format, transports } = winston;
 
 function buildProdLogger() {
@@ -13,9 +13,9 @@ function buildProdLogger() {
 		fatal: 0,
 		error: 1,
 		warn: 2,
-		info: 3,
-		http: 4,
-		debug: 5,
+		notice: 3,
+		info: 4,
+		http: 5,
 		trace: 6,
 	};
 

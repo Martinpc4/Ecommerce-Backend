@@ -1,5 +1,5 @@
 // ! Imports
-// * Interfaces
+// * Types
 import {
 	emailPropertiesInterface,
 	addressPropertiesInterface,
@@ -7,18 +7,18 @@ import {
 	linkedAccountsPropertiesInterface,
 	phonePropertiesInterface,
 } from '../interfaces/users.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Class
-class UserClass {
+// ! Class Defition
+// * Unsecure User Class
+class SecureUserClass {
 	name: string;
 	_id: mongoose.Types.ObjectId;
 	lastName: string;
 	timeStamp: Date;
 	email: emailPropertiesInterface;
 	cartId: mongoose.Types.ObjectId | null;
-	password: string;
 	address: addressPropertiesInterface;
 	phoneNumber: phonePropertiesInterface;
 	linkedAccounts: linkedAccountsPropertiesInterface;
@@ -34,7 +34,6 @@ class UserClass {
 				userProperties.email.verification_code !== null ? userProperties.email.verification_code : null,
 		};
 		this.cartId = userProperties.cartId;
-		this.password = userProperties.password;
 		this.address = {
 			street: userProperties.address.street,
 			city: userProperties.address.city,
@@ -47,6 +46,14 @@ class UserClass {
 		this.linkedAccounts = userProperties.linkedAccounts;
 	}
 }
+// * Secure User Class
+class UnsecureUserClass extends SecureUserClass{
+	password: string;
+	constructor(userProperties: userPropertiesInterface) {
+		super(userProperties);
+		this.password = userProperties.password;
+	}
+}
 
 // ! Exports
-export { UserClass };
+export { SecureUserClass, UnsecureUserClass };

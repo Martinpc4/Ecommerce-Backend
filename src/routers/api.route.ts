@@ -3,14 +3,14 @@
 import { Request, Response, Router } from 'express';
 // * Controllers
 import ProductsController from '../controllers/product.controller';
-// * Models
-import ProductModel from '../models/products.model';
-// * Config
-import mongoose from '../config/mongodb.config';
 // * Loggers
 import logger from '../logs/index.logs';
 // * Middlewares
 import isAdmin from '../middlewares/isAdmin.middleware';
+// * Models
+import ProductModel from '../models/products.model';
+// * Services
+import mongoose from '../services/mongodb.services';
 
 // ! Route Definition
 
@@ -72,7 +72,7 @@ API.get('/products/category/:categoryId', async (req: Request, res: Response) =>
 API.get('/products/:productId', async (req: Request, res: Response) => {
 	try {
 		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
-		if ((await ProductsController.exists(productId)) === false) {
+		if ((await ProductsController.existsById(productId)) === false) {
 			logger.notice({
 				router: 'API',
 				method: 'GET',
@@ -124,7 +124,7 @@ API.post('/products', isAdmin, async (req: Request, res: Response) => {
 				});
 			} else {
 				const productId: mongoose.Types.ObjectId = await ProductsController.save(req.body);
-				if ((await ProductsController.exists(productId)) === true) {
+				if ((await ProductsController.existsById(productId)) === true) {
 					logger.http({
 						message: 'Product created',
 						router: 'API',
@@ -171,7 +171,7 @@ API.post('/products', isAdmin, async (req: Request, res: Response) => {
 API.put('/products/:id', isAdmin, async (req: Request, res: Response) => {
 	try {
 		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.id);
-		if ((await ProductsController.exists(productId)) === false) {
+		if ((await ProductsController.existsById(productId)) === false) {
 			logger.notice({
 				router: 'API',
 				method: 'PUT',
@@ -209,7 +209,7 @@ API.put('/products/:id', isAdmin, async (req: Request, res: Response) => {
 API.delete('/products/:id', isAdmin, async (req: Request, res: Response) => {
 	try {
 		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.id);
-		if ((await ProductsController.exists(productId)) === false) {
+		if ((await ProductsController.existsById(productId)) === false) {
 			logger.notice({
 				router: 'API',
 				method: 'DELETE',
@@ -219,7 +219,7 @@ API.delete('/products/:id', isAdmin, async (req: Request, res: Response) => {
 			res.status(404).json({ error: 'Producto no encontrado' });
 		} else {
 			await ProductsController.deleteById(productId);
-			if ((await ProductsController.exists(productId)) === false) {
+			if ((await ProductsController.existsById(productId)) === false) {
 				logger.http({
 					message: `Product with id:${productId} deleted`,
 					router: 'API',

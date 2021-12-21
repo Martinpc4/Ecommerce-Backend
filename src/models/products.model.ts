@@ -1,10 +1,10 @@
 // ! Imports
-// * Interfaces
+// * Types
 import { productPropertiesInterface } from '../interfaces/products.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Model's Schema
+// ! Model's Schema Defintion
 const productSchema: mongoose.Schema = new mongoose.Schema<productPropertiesInterface>({
 	name: { type: String, required: true },
 	description: { type: String, required: true },

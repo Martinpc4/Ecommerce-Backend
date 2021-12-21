@@ -9,14 +9,14 @@ import logger from './logs/index.logs';
 import mongoStore = require('connect-mongo');
 import cluster from 'cluster';
 import os from 'os';
-// * Routes
+// * Routers
 import API from './routers/api.route';
 import CART from './routers/cart.route';
 import AUTH from './routers/auth.route';
 import MAIN from './routers/main.route';
 import USER from './routers/user.route';
-// * Config
-import environmentVariables from './config/env.config';
+// * Utils
+import env from './utils/env.utils';
 
 // ! Express Server
 
@@ -38,9 +38,10 @@ app.set('views', './src/views/pages');
 // Express Session
 app.use(
 	session({
-		secret: environmentVariables.COOKIE_SESSION_SECRET,
+		secret: env.COOKIE_SESSION_SECRET,
 		store: mongoStore.create({
-			mongoUrl: environmentVariables.MONGODB_URI,
+			mongoUrl: env.MONGODB_URI,
+			collectionName: 'sessions'
 		}),
 		cookie: {
 			httpOnly: false,
@@ -78,7 +79,7 @@ if (cluster.isPrimary) {
 		logger.info(`Worker [PID: ${worker.process.pid}] died`);
 	});
 } else {
-	app.listen(environmentVariables.PORT, () => {
-		logger.info(`Express Server in Worker [PID: ${process.pid}] is running on port ${environmentVariables.PORT}`);
+	app.listen(env.PORT, () => {
+		logger.info(`Express Server in Worker [PID: ${process.pid}] is running on port ${env.PORT}`);
 	});
 }

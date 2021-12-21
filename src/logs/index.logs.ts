@@ -4,10 +4,10 @@ import { Logger } from 'winston';
 // * Loggers
 import buildDevLogger from './dev-logger.logs';
 import buildProdLogger from './prod-logger.logs';
-// * Config
-import env from '../config/env.config';
+// * Utils
+import env from '../utils/env.utils';
 
-// ! Logger Contruction
+// ! Logger Constructor
 let logger: Logger;
 
 if (env.NODE_ENV == 'production') {

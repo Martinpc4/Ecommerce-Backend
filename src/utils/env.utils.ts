@@ -60,6 +60,9 @@ if (
 ) {
 	throw new Error('Nodemailer Development credentials are not defined');
 }
+if (process.env.PUBLIC_KEY === undefined || process.env.PRIVATE_KEY === undefined) {
+	throw new Error('Cryptographic key pair is not defined');
+}
 
 // * Object Contruction
 const environmentVariables = {
@@ -89,6 +92,9 @@ const environmentVariables = {
 	NODEMAILER_USER_DEV: process.env.NODEMAILER_USER_DEV,
 	NODEMAILER_PASSWORD_DEV: process.env.NODEMAILER_PASSWORD_DEV,
 	NODEMAILER_HOST_DEV: process.env.NODEMAILER_HOST_DEV,
+	// Cryptography
+	PUBLIC_KEY: process.env.PUBLIC_KEY,
+	PRIVATE_KEY: process.env.PRIVATE_KEY,
 };
 
 // ! Exports

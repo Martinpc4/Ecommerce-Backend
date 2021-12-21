@@ -2,7 +2,7 @@
 // * Modules
 import { Request, Response, NextFunction } from 'express';
 
-// ! Middleware
+// ! Middleware Defintion
 async function isAdmin(req: Request, res: Response, next: NextFunction) {
 	// TODO Finish this
 	next();

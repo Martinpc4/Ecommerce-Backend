@@ -1,18 +1,28 @@
 // ! Imports
+
 // * Modules
 import { Request, Response, Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+// * Authentication
+import passport from '../auth/passport.auth';
+// * Classes
+import { SecureUserClass } from '../classes/users.classes';
 // * Controllers
 import UsersController from '../controllers/user.controller';
-// * Config
-import mongoose from '../config/mongodb.config';
-import env from '../config/env.config';
-// * Auth Strategies
-import passport from '../auth/passport.auth';
+// * Data Access Objects
+// * Types
 // * Loggers
 import logger from '../logs/index.logs';
+// * Middlewares
+// * Models
+// * Modules
+// * Routers
+// * Services
+import mongoose from '../services/mongodb.services';
+// * Utils
+import env from '../utils/env.utils';
+import { issueJWT } from '../utils/jwt.utils';
 
 // ! Route Definition
 
@@ -29,17 +39,13 @@ AUTH.post(
 		failureRedirect: '/auth/faillogin',
 	}),
 	(req: Request, res: Response) => {
-		if (req.user === undefined) {
+		const userSessionData: any = req.user;
+		if (userSessionData === undefined) {
 			res.status(401).send('Unauthorized');
+		} else {
+			const token: string = issueJWT(new SecureUserClass(userSessionData));
+			res.status(200).json({ token, expiresIn: env.JWT_EXPIRY });
 		}
-		const token: string = jwt.sign(
-			{
-				data: JSON.stringify(req.user),
-			},
-			env.JWT_SECRET,
-			{ expiresIn: env.JWT_EXPIRY }
-		);
-		res.status(200).json({ token });
 	}
 );
 AUTH.get('/faillogin', (req: Request, res: Response) => {
@@ -60,23 +66,20 @@ AUTH.post(
 			},
 		}),
 		dest: path.join(__dirname, '../../public/images/avatars/profile'),
-	}).single('avatarPhoto'), (req, res, next) => {
+	}).single('avatarPhoto'),
+	(req, res, next) => {
 		console.log(req.body);
 		next();
 	},
 	passport.authenticate('signup', { failureRedirect: '/auth/failsignup' }),
 	(req: Request, res: Response) => {
-		if (req.user === undefined) {
+		const userSessionData: any = req.user;
+		if (userSessionData === undefined) {
 			res.status(401).send('Unauthorized');
+		} else {
+			const token: string = issueJWT(new SecureUserClass(userSessionData));
+			res.status(200).json({ token, expiresIn: env.JWT_EXPIRY });
 		}
-		const token: string = jwt.sign(
-			{
-				data: JSON.stringify(req.user),
-			},
-			env.JWT_SECRET,
-			{ expiresIn: env.JWT_EXPIRY }
-		);
-		res.status(200).json({ token });
 	}
 );
 AUTH.get('/failsignup', (req: Request, res: Response) => {
@@ -133,7 +136,13 @@ AUTH.get(
 	'/facebook/callback',
 	passport.authenticate('facebook', { failureRedirect: '/auth/faillogin' }),
 	(req: Request, res: Response) => {
-		res.status(200).redirect(`${env.HOME_ROUTE}`);
+		const userSessionData: any = req.user;
+		if (userSessionData === undefined) {
+			res.status(401).send('Unauthorized');
+		} else {
+			const token: string = issueJWT(new SecureUserClass(userSessionData));
+			res.status(200).json({ token, expiresIn: env.JWT_EXPIRY });
+		}
 	}
 );
 
@@ -144,7 +153,13 @@ AUTH.get(
 	'/github/callback',
 	passport.authenticate('github', { failureRedirect: '/auth/faillogin' }),
 	(req: Request, res: Response) => {
-		res.status(200).redirect(`${env.HOME_ROUTE}`);
+		const userSessionData: any = req.user;
+		if (userSessionData === undefined) {
+			res.status(401).send('Unauthorized');
+		} else {
+			const token: string = issueJWT(new SecureUserClass(userSessionData));
+			res.status(200).json({ token, expiresIn: env.JWT_EXPIRY });
+		}
 	}
 );
 

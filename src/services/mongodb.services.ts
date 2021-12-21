@@ -4,8 +4,8 @@ import mongoose from 'mongoose';
 import cluster from 'cluster';
 // * Loggers
 import logger from '../logs/index.logs';
-// * Config
-import env from './env.config';
+// * Utils
+import env from '../utils/env.utils';
 
 // ! MongoDB Connection
 if (cluster.isPrimary !== true) {

@@ -2,17 +2,19 @@
 // * Modules
 import { Strategy as FBStrategy } from 'passport-facebook';
 import bcrypt from 'bcrypt';
+// * Classes
+import { SecureUserClass } from '../classes/users.classes';
 // * Controllers
 import UsersController from '../controllers/user.controller';
-// * Classes
-import { UserClass } from '../classes/users.classes';
-// * Interfaces
+// * Types
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
-import env from '../config/env.config';
+// * Services
+import mongoose from '../services/mongodb.services';
+// * Utils
+import env from '../utils/env.utils';
 
-// ! Facebook Strategy
+
+// ! Facebook Strategy Definition
 const FacebookSrategy = new FBStrategy(
 	{
 		clientID: `${env.FACEBOOK_APP_ID}`,
@@ -21,8 +23,8 @@ const FacebookSrategy = new FBStrategy(
 		profileFields: ['id', 'name', 'emails', 'photos'],
 	},
 	async (accessToken, refreshToken, profile, done) => {
-		if (await UsersController.verifyFacebookId(profile.id)) {
-			const userInstance: UserClass = await UsersController.getUserByFacebookId(profile.id);
+		if (await UsersController.existsByFacebookId(profile.id)) {
+			const userInstance: SecureUserClass = await UsersController.getUserByFacebookId(profile.id);
 			done(null, userInstance);
 		} else if (profile.name !== undefined && profile.emails !== undefined) {
 			console.log(profile);
@@ -60,7 +62,7 @@ const FacebookSrategy = new FBStrategy(
 			const flagVar: boolean = await UsersController.createUser(userProperties);
 
 			if (flagVar) {
-				const userInstance: UserClass = await UsersController.getUserByFacebookId(profile.id);
+				const userInstance: SecureUserClass = await UsersController.getUserByFacebookId(profile.id);
 				done(null, userInstance);
 			} else {
 				done(new Error('Internal Server Error'), null);

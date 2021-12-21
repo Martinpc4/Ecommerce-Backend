@@ -3,7 +3,7 @@
 import winston from 'winston';
 import { AbstractConfigSetLevels } from 'winston/lib/winston/config';
 
-// ! Logger
+// ! Logger Defintion
 const { createLogger, format, transports } = winston;
 
 function buildDevLogger() {

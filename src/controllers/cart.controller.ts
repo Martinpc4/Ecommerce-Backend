@@ -1,23 +1,22 @@
 // ! Imports
-// * Modules
-import ProductsController from './product.controller';
-import UsersController from './user.controller';
 // * Classes
 import { CartClass } from '../classes/carts.classes';
 import { CartProductClass } from '../classes/products.classes';
-// * Interfaces
-import { cartPropertiesInterface } from '../interfaces/carts.interfaces';
+// * Controllers
+import ProductsController from './product.controller';
+import UsersController from './user.controller';
+// * Data Access Objects
+import CartsDAO from '../daos/carts.daos';
+// * Types
 import { cartProductsInterface } from '../interfaces/products.interfaces';
-// * Models
-import CartsModel from '../models/carts.model';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Controller
+// ! Controller Definition
 class CartControllerClass {
 	constructor() {}
 	async exists(cartId: mongoose.Types.ObjectId): Promise<boolean> {
-		if ((await CartsModel.findById(cartId)) !== null) {
+		if ((await CartsDAO.getById(cartId)) !== null) {
 			return true;
 		} else {
 			return false;
@@ -34,20 +33,20 @@ class CartControllerClass {
 			cartInstace.total += cartProduct.price * cartProduct.amount;
 		});
 
-		await CartsModel.findOneAndUpdate({ _id: cartId }, { $set: { total: cartInstace.total } });
+		const updatedCart: CartClass = await CartsDAO.updateById(cartId, cartInstace);
 
-		return cartInstace.total;
+		return updatedCart.total;
 	}
 	async getCartById(cartId: mongoose.Types.ObjectId): Promise<CartClass> {
 		if (!(await this.exists(cartId))) {
 			throw new Error(`Cart with [_id:${cartId}] was not found`);
+		} else {
+			const cartInstance: CartClass | null = await CartsDAO.getById(cartId);
+			if (cartInstance === null) {
+				throw new Error(`Internal server error: cart not found`);
+			}
+			return cartInstance;
 		}
-		const cartDocument: cartPropertiesInterface | null = await CartsModel.findById(cartId);
-		if (cartDocument === null) {
-			throw new Error('Internal server error');
-		}
-		const cartInstance: CartClass = new CartClass(cartDocument);
-		return cartInstance;
 	}
 	async isProductInCartById(
 		cartId: mongoose.Types.ObjectId,
@@ -57,12 +56,15 @@ class CartControllerClass {
 	): Promise<boolean> {
 		if (!(await this.exists(cartId))) {
 			throw new Error(`Cart with id: ${cartId} was not found`);
-		}
-		const cartFound: cartPropertiesInterface | null = await CartsModel.findById(cartId);
-		if (cartFound !== null) {
-			const cartInstanced: CartClass = new CartClass(cartFound);
+		} else {
+			const cartInstance: CartClass | null= await CartsDAO.getById(cartId);
+
+			if (cartInstance === null) {
+				throw new Error(`Internal server error: cart not found`);
+			}
+
 			let flagVar: boolean = false;
-			cartInstanced.products.forEach((productProperties) => {
+			cartInstance.products.forEach((productProperties) => {
 				if (
 					productProperties._id.equals(productId) &&
 					productProperties.color === productColor &&
@@ -74,7 +76,6 @@ class CartControllerClass {
 			});
 			return flagVar;
 		}
-		throw new Error('Internal server error');
 	}
 	async createCart(userId: mongoose.Types.ObjectId, userProducts: cartProductsInterface[]): Promise<CartClass> {
 		const newCartInstance: CartClass = new CartClass({
@@ -85,40 +86,38 @@ class CartControllerClass {
 			total: 0,
 			state: true,
 		});
-		
-		const cartDocument: mongoose.Document = new CartsModel(newCartInstance);
 
-		await cartDocument.save();
+		const cartInstance: CartClass = await CartsDAO.add(newCartInstance);
 
-		await this.updateCartTotal(newCartInstance._id);
+		await this.updateCartTotal(cartInstance._id);
 
-		await UsersController.linkCartToUserById(userId, cartDocument._id);
+		await UsersController.linkCartToUserById(userId, cartInstance._id);
 
 		return newCartInstance;
 	}
 	async removeCartById(cartId: mongoose.Types.ObjectId): Promise<void> {
 		if (await this.exists(cartId)) {
-			await CartsModel.deleteOne({
-				_id: cartId,
-			});
+			await CartsDAO.deleteById(cartId);
 		} else {
 			throw new Error(`Cart with id:${cartId} was not found`);
 		}
 	}
 	async emptyCartById(cartId: mongoose.Types.ObjectId): Promise<void> {
 		if ((await this.exists(cartId)) === true) {
-			await CartsModel.updateOne({ _id: cartId }, { $set: { products: [] } });
+			const cartInstance: CartClass = await this.getCartById(cartId);
+			cartInstance.products = [];
+			await CartsDAO.updateById(cartId, cartInstance);
 		} else {
 			throw new Error(`Cart with id:${cartId} was not found`);
 		}
 	}
 	async getAllProductsFromCartById(cartId: mongoose.Types.ObjectId): Promise<cartProductsInterface[]> {
-		const cartDocument: cartPropertiesInterface | null = await CartsModel.findById(cartId);
-		if (cartDocument !== null) {
-			const cartInstance: CartClass = new CartClass(cartDocument);
+		if (await this.exists(cartId)) {
+			const cartInstance: CartClass = await this.getCartById(cartId);
 			return cartInstance.products;
+		} else {
+			throw new Error(`Cart with [_id:${cartId}] was not found`);
 		}
-		throw new Error('Internal server errror');
 	}
 	async addProductToCartById(
 		cartId: mongoose.Types.ObjectId,
@@ -128,32 +127,28 @@ class CartControllerClass {
 		memory: number
 	): Promise<boolean> {
 		if (await this.exists(cartId)) {
-			const cartData: cartPropertiesInterface | null = await CartsModel.findById(cartId);
-			if (cartData !== null) {
-				const cartInstance: CartClass = new CartClass(cartData);
-				const validatedProduct: CartProductClass = await ProductsController.getValidProduct(
-					productId,
-					amount,
-					color,
-					memory
-				);
+			const cartInstance: CartClass = await this.getCartById(cartId);
 
-				await cartInstance.addProductById(
-					validatedProduct._id,
-					validatedProduct.amount,
-					validatedProduct.memory,
-					validatedProduct.color
-				);
+			const validatedProduct: CartProductClass = await ProductsController.getValidProduct(
+				productId,
+				amount,
+				color,
+				memory
+			);
 
-				await CartsModel.updateOne({ _id: cartId }, { $set: { products: cartInstance.products } });
+			await cartInstance.addProductById(
+				validatedProduct._id,
+				validatedProduct.amount,
+				validatedProduct.memory,
+				validatedProduct.color
+			);
 
-				if (await this.isProductInCartById(cartId, productId, color, memory)) {
-					return true;
-				} else {
-					return false;
-				}
+			await CartsDAO.updateById(cartId, cartInstance);
+
+			if (await this.isProductInCartById(cartId, productId, color, memory)) {
+				return true;
 			} else {
-				throw new Error('Internal server error');
+				return false;
 			}
 		} else {
 			throw new Error(`Cart with id:${cartId} was not found`);
@@ -166,20 +161,15 @@ class CartControllerClass {
 		productMemory: number
 	): Promise<boolean> {
 		if (await this.exists(cartId)) {
-			const cartData: cartPropertiesInterface | null = await CartsModel.findById(cartId);
-			if (cartData !== null) {
-				const cartInstance: CartClass = new CartClass(cartData);
-				cartInstance.removeProductById(productId, productColor, productMemory);
+			const cartInstance: CartClass = await this.getCartById(cartId);
+			cartInstance.removeProductById(productId, productColor, productMemory);
 
-				await CartsModel.updateOne({ _id: cartId }, { $set: { products: cartInstance.products } });
+			await CartsDAO.updateById(cartId, cartInstance);
 
-				if (!(await this.isProductInCartById(cartId, productId, productColor, productMemory))) {
-					return true;
-				} else {
-					return false;
-				}
+			if (!(await this.isProductInCartById(cartId, productId, productColor, productMemory))) {
+				return true;
 			} else {
-				throw new Error('Internal server error');
+				return false;
 			}
 		} else {
 			throw new Error(`Cart with id:${cartId} was not found`);
@@ -193,15 +183,12 @@ class CartControllerClass {
 		amount: number
 	): Promise<boolean> {
 		if ((await this.exists(cartId)) || (await this.isProductInCartById(cartId, productId, color, memory))) {
-			const cartData: cartPropertiesInterface | null = await CartsModel.findById(cartId);
-			if (cartData === null) {
-				throw new Error('Internal server error');
-			}
-			const cartInstance: CartClass = new CartClass(cartData);
+			const cartInstance: CartClass = await this.getCartById(cartId);
+
 			cartInstance.modifyProductStockById(productId, memory, color, amount);
 
 			if (await this.isProductInCartById(cartId, productId, color, memory)) {
-				await CartsModel.updateOne({ _id: { $eq: cartId } }, { $set: { products: cartInstance.products } });
+				await CartsDAO.updateById(cartId, cartInstance);
 				return true;
 			} else {
 				throw new Error('Internal server error');
@@ -214,7 +201,9 @@ class CartControllerClass {
 	}
 	async deactivateCart(cartId: mongoose.Types.ObjectId): Promise<boolean> {
 		if (await this.exists(cartId)) {
-			await CartsModel.updateOne({ _id: cartId }, { $set: { state: false } });
+			const cartInstance: CartClass = await this.getCartById(cartId);
+			cartInstance.state = false;
+			await CartsDAO.updateById(cartId, cartInstance);
 			return true;
 		} else {
 			throw new Error(`Cart with [_id:${cartId}] was not found`);

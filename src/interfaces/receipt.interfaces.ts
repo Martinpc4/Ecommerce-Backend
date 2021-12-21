@@ -1,8 +1,8 @@
 // ! Imports
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Interface
+// ! Interface Definition
 interface receiptPropertiesInterface {
 	_id: mongoose.Types.ObjectId;
 	userId: mongoose.Types.ObjectId;

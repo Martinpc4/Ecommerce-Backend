@@ -1,15 +1,15 @@
 // ! Imports
-// * Controllers
-import ProductsController from '../controllers/product.controller';
-// * Interfaces
+// * Classes
+import { ProductClass } from './products.classes';
+// * Data Access Objects
+import ProductsDAO from '../daos/products.daos';
+// * Types
 import { cartPropertiesInterface } from '../interfaces/carts.interfaces';
-import { productPropertiesInterface, cartProductsInterface } from '../interfaces/products.interfaces';
-// * Models
-import ProductsModel from '../models/products.model';
-// * Config
-import mongoose from '../config/mongodb.config';
+import { cartProductsInterface } from '../interfaces/products.interfaces';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Class
+// ! Class Definition
 class CartClass {
 	_id: mongoose.Types.ObjectId;
 	products: cartProductsInterface[];
@@ -60,8 +60,8 @@ class CartClass {
 		memory: number,
 		color: string
 	): Promise<void> {
-		if (await ProductsController.exists(productId)) {
-			const productDocument: productPropertiesInterface | null = await ProductsModel.findById(productId);
+		if (await ProductsDAO.existsById(productId)) {
+			const productDocument: ProductClass = await ProductsDAO.getById(productId);
 
 			if (productDocument == null) {
 				throw new Error(`The product with id ${productId} does not exist in database`);

@@ -1,24 +1,26 @@
 // ! Imports
 // * Modules
 import ejs from 'ejs';
-// * Controllers
-import CartsController from './cart.controller';
-import UsersController from './user.controller';
 // * Classes
 import { ReceiptClass } from '../classes/receipts.class';
 import { CartClass } from '../classes/carts.classes';
-// * Models
-import ReceiptsModel from '../models/receips.model';
-// * Config
-import mongoose from '../config/mongodb.config';
-import { adminMail, etherealTransporter, mailOptions } from '../config/ethereal.config';
-import env from '../config/env.config';
+// * Controllers
+import CartsController from './cart.controller';
+import UsersController from './user.controller';
+// * Data Access Objects
+import ReceiptsDAO from '../daos/receipts.daos';
+// * Services
+import mongoose from '../services/mongodb.services';
+import { adminMail, etherealTransporter, mailOptions } from '../services/ethereal.services';
+// * Utils
+import env from '../utils/env.utils';
 
-// ! Controller
+
+// ! Controller Definition
 class ReceiptController {
 	constructor() {}
 	async exists(receiptId: mongoose.Types.ObjectId): Promise<boolean> {
-		if ((await ReceiptsModel.exists({ _id: receiptId })) !== null) {
+		if (await ReceiptsDAO.existsById(receiptId) !== null) {
 			return true;
 		} else {
 			return false;
@@ -28,7 +30,7 @@ class ReceiptController {
 		if (!(await CartsController.exists(cartId))) {
 			throw new Error('Cart not found');
 		}
-		if (!(await UsersController.isUserById(userId))) {
+		if (!(await UsersController.existsById(userId))) {
 			throw new Error('User not found');
 		}
 
@@ -44,27 +46,22 @@ class ReceiptController {
 			total: cartInstance.total,
 		});
 
-		const receiptDocument: mongoose.Document = new ReceiptsModel(receiptInstance);
-		
-		receiptDocument.save();
+		const receiptInstanced: ReceiptClass = await ReceiptsDAO.create(receiptInstance);
 		
 		await UsersController.linkCartToUserById(userId, null);
 		await CartsController.deactivateCart(cartInstance._id);
 
 		if (!(await UsersController.existsCartLinkedById(userId)) && (await this.exists(receiptInstance._id))) {
-			await etherealTransporter.sendMail({
-				...mailOptions,
-				to: (await UsersController.getUserById(userId)).email.email,
-				subject: 'Import BA - Receipt',
-				html: String(
-					await ejs.renderFile(__dirname.replace('dist/controllers', 'src/views/pages/receipt.ejs'), {
-						serverAddress: env.SERVER_ADDRESS,
-						receiptId: receiptInstance._id,
-						products: cartInstance.products,
-						total: cartInstance.total,
-					})
-				),
-			});
+			// Send receipt to user
+			await UsersController.sendMailById(userId, String(
+				await ejs.renderFile(__dirname.replace('dist/controllers', 'src/views/pages/receipt.ejs'), {
+					serverAddress: env.SERVER_ADDRESS,
+					receiptId: receiptInstance._id,
+					products: cartInstance.products,
+					total: cartInstance.total,
+				})
+			), 'Import BA - Receipt');
+			// Notice of new purchase to admin
 			await etherealTransporter.sendMail({
 				...mailOptions,
 				to: adminMail,

@@ -6,20 +6,22 @@ import bcrypt from 'bcrypt';
 // * Controllers
 import UsersController from '../controllers/user.controller';
 // * Classes
-import { UserClass } from '../classes/users.classes';
+import { UnsecureUserClass, SecureUserClass } from '../classes/users.classes';
 // * Interfaces
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
 // * Models
 import UserModel from '../models/users.model';
 // * Config
-import mongoose from '../config/mongodb.config';
+import mongoose from '../services/mongodb.services';
+import UsersDAO from '../daos/users.daos';
 
 // ! Local Strategy
+// * Signup Strategy
 const SignupLocalStrategy = new LStrategy(
 	{ passReqToCallback: true, passwordField: 'password', usernameField: 'email' },
 	async (req: Request, username: string, password: string, done: any): Promise<void> => {
 		try {
-			if (await UsersController.isUserByUsername(username)) {
+			if (await UsersController.existsByFacebookId(username)) {
 				done(null, false); // User Found in Database
 			} else {
 				if (
@@ -66,9 +68,12 @@ const SignupLocalStrategy = new LStrategy(
 
 					await UsersController.createUser(userProperties);
 
-					const userInstance: UserClass = await UsersController.getUserById(userProperties._id);
-
-					if (await UsersController.isUserByUsername(username)) {
+					
+					if (await UsersController.existsByEmail(username)) {
+						const userInstance: SecureUserClass | null = await UsersDAO.getSecureById(userProperties._id);
+						if (userInstance == null) {
+							done(new Error('Internal server error: User not found'), false);
+						}
 						return done(null, userInstance);
 					} else {
 						return done(null, false); // User not added to database by error
@@ -83,6 +88,7 @@ const SignupLocalStrategy = new LStrategy(
 	}
 );
 
+// * Login Strategy
 const LoginLocalStrategy = new LStrategy(
 	{ passReqToCallback: false, passwordField: 'password', usernameField: 'username' },
 	async (username, password, done: any) => {

@@ -2,17 +2,18 @@
 // * Modules
 import { Strategy as GHStrategy } from 'passport-github2';
 import bcrypt from 'bcrypt';
+// * Classes
+import { SecureUserClass } from '../classes/users.classes';
 // * Controllers
 import UsersController from '../controllers/user.controller';
-// * Classes
-import { UserClass } from '../classes/users.classes';
-// * Interfaces
+// * Types
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
-import env from '../config/env.config';
+// * Services
+import mongoose from '../services/mongodb.services';
+// * Utils
+import env from '../utils/env.utils';
 
-// ! Github Strategy
+// ! Github Strategy Defintion
 const GithubStrategy: GHStrategy = new GHStrategy(
 	{
 		clientID: env.GITHUB_CLIENT_ID,
@@ -22,8 +23,8 @@ const GithubStrategy: GHStrategy = new GHStrategy(
 	},
 	async (accessToken: any, refreshToken: any, profile: any, done: any) => {
 		try {
-			if (await UsersController.verifyGithubId(profile.id)) {
-				const userInstance: UserClass = await UsersController.getUserByGithubId(profile.id);
+			if (await UsersController.existsByGithubId(profile.id)) {
+				const userInstance: SecureUserClass = await UsersController.getSecureByGithubId(profile.id);
 				done(null, userInstance);
 			} else if (
 				profile.name !== null &&
@@ -62,7 +63,7 @@ const GithubStrategy: GHStrategy = new GHStrategy(
 				const flagVar: boolean = await UsersController.createUser(userProperties);
 
 				if (flagVar) {
-					const userInstance: UserClass = await UsersController.getUserByGithubId(profile.id);
+					const userInstance: SecureUserClass = await UsersController.getSecureByGithubId(profile.id);
 					done(null, userInstance);
 				} else {
 					done(new Error('Internal Server Error'), null);

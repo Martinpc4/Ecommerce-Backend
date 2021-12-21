@@ -1,10 +1,10 @@
 // ! Imports
-// * Interfaces
+// * Types
 import { cartPropertiesInterface } from '../interfaces/carts.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Model's Schema
+// ! Model's Schema Defintion
 const cartSchema: mongoose.Schema = new mongoose.Schema<cartPropertiesInterface>({
 	products: { type: [{}], required: true, default: [] },
 	userId: {

@@ -1,10 +1,10 @@
 // ! Imports
-// * Interfaces
+// * Types
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
-// * Config
-import mongoose from '../config/mongodb.config';
+// * Services
+import mongoose from '../services/mongodb.services';
 
-// ! Model's Schema
+// ! Model's Schema Defintion
 const userSchema: mongoose.Schema = new mongoose.Schema<userPropertiesInterface>({
 	_id: mongoose.Types.ObjectId,
 	name: { type: String, required: true },
