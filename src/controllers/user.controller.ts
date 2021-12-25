@@ -9,9 +9,10 @@ import UsersDAO from '../daos/users.daos';
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
 // * Services
 import mongoose from '../services/mongodb.services';
-import { etherealTransporter, mailOptions } from '../services/ethereal.services';
+import { etherealTransporter, mailOptions } from '../services/nodemon.services';
 // * Utils
 import env from '../utils/env.utils';
+import { compareHashedPassword, hashPassword } from '../utils/crypto.utils';
 
 // ! Controller Definition
 class UserControllerClass {
@@ -45,8 +46,8 @@ class UserControllerClass {
 				}
 				await etherealTransporter.sendMail({
 					...mailOptions,
-					to: secureUserInstance.email.email,
-					subject,
+					to: String(secureUserInstance.email.email),
+					subject: subject,
 					html: content,
 				});
 			} else {
@@ -60,24 +61,21 @@ class UserControllerClass {
 		try {
 			await UsersDAO.create(new UnsecureUserClass(userProperties));
 
-			if (await this.existsById(userProperties._id)) {
-				await UsersController.sendMailById(
-					userProperties._id,
-					String(
-						await ejs.renderFile(
-							__dirname.replace('dist/controllers', 'src/views/pages/email_verification.ejs'),
-							{
-								serverAddress: env.SERVER_ADDRESS,
-								emailVerificationCode: String(userProperties.email.verification_code),
-							}
-						)
-					),
-					'Import BA - Email Verification'
-				);
-				return true;
-			} else {
-				throw new Error('User creation failed: user already exists');
-			}
+			await this.sendMailById(
+				userProperties._id,
+				String(
+					await ejs.renderFile(
+						`${__dirname}/views/pages/email_verification.ejs`,
+						{
+							emailVerificationCode: userProperties.email.verification_code,
+						}
+					)
+				),
+				'Import BA - Email Verification'
+			);
+
+			console.log('PASO EL MAIL');
+			return true;
 		} catch (err) {
 			throw new Error(`\n"createUser" Error: ${err}`);
 		}
@@ -111,28 +109,39 @@ class UserControllerClass {
 			throw new Error(`\n"getUserByUsername" Error: ${err}`);
 		}
 	}
-	async updateUser(userId: mongoose.Types.ObjectId, newUserInstance: UnsecureUserClass): Promise<void> {
+	async updatePassword(userId: mongoose.Types.ObjectId, password: string): Promise<void> {
 		try {
 			if (await this.existsById(userId)) {
-				const unsecureUserInstance: UnsecureUserClass | null = await UsersDAO.getUnsecureById(userId);
+				await UsersDAO.updatePasswordById(userId, await hashPassword(password));
+			} else {
+				throw new Error('Update user request failed: user not found');
+			}
+		} catch (err) {
+			throw new Error(`\n"updateUser" Error: ${err}`);
+		}
+	}
+	async updateSecureUser(userId: mongoose.Types.ObjectId, newUserInstance: SecureUserClass): Promise<void> {
+		try {
+			if (await this.existsById(userId)) {
+				const secureUserInstance: SecureUserClass | null = await UsersDAO.getSecureById(userId);
 
-				if (unsecureUserInstance === null) {
+				if (secureUserInstance === null) {
 					throw new Error('Internal server error: user not found');
 				}
 
-				if (newUserInstance.email.email !== unsecureUserInstance.email.email) {
+				if (newUserInstance.email.email !== secureUserInstance.email.email) {
 					await UsersDAO.updateSecureById(userId, {
-						...unsecureUserInstance,
+						...secureUserInstance,
 						...newUserInstance,
 						email: {
-							...unsecureUserInstance.email,
+							...secureUserInstance.email,
 							...newUserInstance.email,
 							verified: false,
 							verification_code: new mongoose.Types.ObjectId(),
 						},
 					});
 				} else {
-					await UsersDAO.updateSecureById(userId, { ...unsecureUserInstance, ...newUserInstance });
+					await UsersDAO.updateSecureById(userId, { ...secureUserInstance, ...newUserInstance });
 				}
 			} else {
 				throw new Error('Update user request failed: user not found');
@@ -184,6 +193,22 @@ class UserControllerClass {
 			}
 		} catch (err) {
 			throw new Error(`\n"linkCartToUserById" Error: ${err}`);
+		}
+	}
+	// Verify Encrypted Password
+	async verifyPassword(userId: mongoose.Types.ObjectId, password: string): Promise<boolean> {
+		try {
+			if (await this.existsById(userId)) {
+				const userInstance: UnsecureUserClass | null = await UsersDAO.getUnsecureById(userId);
+				if (userInstance === null) {
+					throw new Error('Internal server error: user not found');
+				}
+				return await compareHashedPassword(password, userInstance.password);
+			} else {
+				throw new Error('Verify password request failed: user not found');
+			}
+		} catch (err) {
+			throw new Error(`\n"verifyPassword" Error: ${err}`);
 		}
 	}
 	// Email verification Methods

@@ -42,7 +42,7 @@ class ProductControllerClass {
 				return false;
 			}
 			if (
-				productData.stock[productData.colors.indexOf(cartProductProperties.color)] <=
+				productData.stock[productData.colors.indexOf(cartProductProperties.color)] <
 				cartProductProperties.amount
 			) {
 				return false;

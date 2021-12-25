@@ -9,11 +9,10 @@ import UsersController from '../controllers/user.controller';
 import { UnsecureUserClass, SecureUserClass } from '../classes/users.classes';
 // * Interfaces
 import { userPropertiesInterface } from '../interfaces/users.interfaces';
-// * Models
-import UserModel from '../models/users.model';
 // * Config
 import mongoose from '../services/mongodb.services';
 import UsersDAO from '../daos/users.daos';
+import { hashPassword } from '../utils/crypto.utils';
 
 // ! Local Strategy
 // * Signup Strategy
@@ -21,7 +20,7 @@ const SignupLocalStrategy = new LStrategy(
 	{ passReqToCallback: true, passwordField: 'password', usernameField: 'email' },
 	async (req: Request, username: string, password: string, done: any): Promise<void> => {
 		try {
-			if (await UsersController.existsByFacebookId(username)) {
+			if (await UsersController.existsByEmail(username)) {
 				done(null, false); // User Found in Database
 			} else {
 				if (
@@ -38,7 +37,7 @@ const SignupLocalStrategy = new LStrategy(
 				) {
 					const userProperties: userPropertiesInterface = {
 						_id: new mongoose.Types.ObjectId(),
-						password: await bcrypt.hash(password, 10),
+						password: await hashPassword(password),
 						name: req.body.name,
 						lastName: req.body.lastName,
 						timeStamp: new Date(),
@@ -65,9 +64,8 @@ const SignupLocalStrategy = new LStrategy(
 							state: req.body.state,
 						},
 					};
-
+					
 					await UsersController.createUser(userProperties);
-
 					
 					if (await UsersController.existsByEmail(username)) {
 						const userInstance: SecureUserClass | null = await UsersDAO.getSecureById(userProperties._id);
@@ -92,19 +90,18 @@ const SignupLocalStrategy = new LStrategy(
 const LoginLocalStrategy = new LStrategy(
 	{ passReqToCallback: false, passwordField: 'password', usernameField: 'username' },
 	async (username, password, done: any) => {
-		const userData: userPropertiesInterface | null = await UserModel.findOne({
-			'email.email': { $eq: username },
-		});
-
-		if (userData === null) {
-			return done(null, false);
-		}
-		
-		if (!(await bcrypt.compare(password, userData.password))) {
-			return done(null, false);
+		if (await UsersController.existsByEmail(username)) {
+			const secureUserInstance: SecureUserClass = await UsersController.getUserByUsername(username);
+			if (!(await UsersController.verifyPassword(secureUserInstance._id, password))) {
+				return done(null, false);
+			} else {
+				return done(null, secureUserInstance);
+			}
 		} else {
-			return done(null, userData);
+			return done(null, false);
 		}
+
+
 	}
 );
 

@@ -4,13 +4,14 @@ import { Request, Response, Router } from 'express';
 // * Authentication
 import passport from '../auth/passport.auth';
 // * Classes
-import { UnsecureUserClass } from '../classes/users.classes';
+import { SecureUserClass } from '../classes/users.classes';
 // * Controllers
 import UsersController from '../controllers/user.controller';
-// * Types
-import { userPropertiesInterface } from '../interfaces/users.interfaces';
 // * Loggers
 import logger from '../logs/index.logs';
+// * Services
+import mongoose from '../services/mongodb.services';
+
 
 // ! Route Definition
 
@@ -19,21 +20,13 @@ const USER: Router = Router();
 
 // * USER Routes
 // Get user profile
-USER.get('/', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
+USER.get('/profile', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
 			throw new Error('Internal Server Error');
 		}
-		res.status(200).json({
-			name: userInstance.name,
-			lastName: userInstance.lastName,
-			timeStamp: userInstance.timeStamp,
-			email: userInstance.email,
-			cartId: userInstance.cartId,
-			phoneNumber: userInstance.phoneNumber,
-			address: userInstance.address,
-		});
+		res.status(200).json(userInstance);
 		logger.http({
 			message: 'User profile requested and sent',
 			router: 'USER',
@@ -52,16 +45,16 @@ USER.get('/', passport.authenticate('jwt', { session: false }), async (req: Requ
 	}
 });
 // Update user profile
-USER.put('/update', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
+USER.put('/update/profile', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
 			throw new Error('Internal Server Error: Unauthorised user access');
 		}
 
-		const newUserInstance: userPropertiesInterface = new UnsecureUserClass(req.body);
+		const newSecureUserInstance: SecureUserClass = new SecureUserClass(req.body);
 
-		await UsersController.updateUser(userInstance._id, newUserInstance);
+		await UsersController.updateSecureUser(userInstance._id, newSecureUserInstance);
 
 		res.status(200).send('User profile updated correctly');
 		logger.http({
@@ -75,12 +68,152 @@ USER.put('/update', passport.authenticate('jwt', { session: false }), async (req
 			message: 'Update user profile failed',
 			router: 'USER',
 			method: 'PUT',
+			route: '/update/profile',
+			stack: err,
+		});
+		res.status(500).send(err);
+	}
+});
+// Update user's password
+USER.put('/update/password', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
+	try {
+		const userInstance: any | undefined = req.user;
+		if (userInstance === undefined) {
+			throw new Error('Internal Server Error: Unauthorised user access');
+		}
+
+		console.log(req.body);
+		const passwords: {
+			oldPassword: string;
+			newPassword: string;
+		} = req.body;
+
+		if (passwords.oldPassword === undefined || passwords.newPassword === undefined) {
+			logger.error({
+				message: 'Update user profile password failed',
+				router: 'USER',
+				method: 'PUT',
+				route: '/update/profile',
+				stack: 'Missing password fields',
+			});
+			res.status(404).send('Missing password fields');
+		} else {
+			if (await UsersController.verifyPassword(userInstance._id, passwords.oldPassword)) {
+				await UsersController.updatePassword(userInstance._id, passwords.newPassword);
+
+				res.status(200).send('User password updated correctly');
+				logger.http({
+					message: 'User profile updated',
+					router: 'USER',
+					method: 'PUT',
+					route: '/update/password',
+				});
+			} else {
+				logger.error({
+					message: 'Update user password failed',
+					router: 'USER',
+					method: 'PUT',
+					route: '/update/profile',
+					stack: 'Incorrect password',
+				});
+				res.status(401).send('Incorrect password');
+			}
+		}
+	} catch (err) {
+		logger.error({
+			message: 'Update user password failed',
+			router: 'USER',
+			method: 'PUT',
 			route: '/',
 			stack: err,
 		});
 		res.status(500).send(err);
 	}
 });
+// Verify user's email
+USER.post('/verify', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
+	try {
+		const userInstance: any | undefined = req.user;
+		if (userInstance === undefined) {
+			throw new Error('Internal Server Error: Unauthorised user access');
+		}
+		if (req.body.verificationCode === undefined) {
+			res.status(400).json({ success: false, message: 'Invalid verification code' });
+			logger.notice({
+				message: 'Invalid verification code',
+				router: 'USER',
+				method: 'POST',
+				route: '/verify',
+			});
+		} else {
+			const userVerificationCode: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(
+				req.body.verificationCode
+			);
+
+			const flagVar: boolean = await UsersController.verifyUserEmail(userInstance._id, userVerificationCode);
+			if (flagVar) {
+				res.status(200).json({ success: true, message: 'Email Verified' });
+				logger.notice({
+					message: 'Email Verified',
+					router: 'AUTH',
+					method: 'POST',
+					route: '/:userId/email_v/:verificationCode',
+				});
+			} else {
+				res.status(400).json({ success: false, message: 'Verification Failed' });
+				logger.notice({
+					message: 'Verficiation Failed',
+					router: 'AUTH',
+					method: 'POST',
+					route: '/:userId/verify_email/:verificationCode',
+				});
+			}
+		}
+	} catch (err) {
+		logger.error({
+			message: 'Error in verifying email',
+			router: 'AUTH',
+			method: 'POST',
+			route: '/:userId/verify_email/:verificationCode',
+			stack: err,
+		});
+		res.status(500).json({ success: false, message: 'Internal Server Error', stack: err });
+	}
+});
+// Send verification code via email to user
+USER.post(
+	'/verification_code',
+	passport.authenticate('jwt', { session: false }),
+	async (req: Request, res: Response) => {
+		try {
+			const userInstance: any | undefined = req.user;
+			if (userInstance === undefined) {
+				throw new Error('Internal Server Error: Unauthorised user access');
+			}
+			await UsersController.sendMailById(
+				userInstance._id,
+				userInstance.email.verification_code,
+				'Verification Code'
+			);
+			res.status(200).json({ success: true, message: 'Verification code sent' });
+			logger.notice({
+				message: 'Verification code sent',
+				router: 'USER',
+				method: 'POST',
+				route: '/verification_code',
+			});
+		} catch (err) {
+			logger.error({
+				message: 'Error in sending verification code',
+				router: 'USER',
+				method: 'POST',
+				route: '/verification_code',
+				stack: err,
+			});
+			res.status(500).json({ success: false, message: 'Internal Server Error', stack: err });
+		}
+	}
+);
 
 // ! Exports
 export default USER;

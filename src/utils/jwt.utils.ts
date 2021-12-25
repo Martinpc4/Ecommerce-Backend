@@ -1,6 +1,6 @@
 // ! Imports
 // * Modules
-import * as jwt from 'jsonwebtoken';
+import {JwtPayload, sign, verify} from 'jsonwebtoken';
 // * Classes
 import { SecureUserClass } from '../classes/users.classes';
 // * Utils
@@ -12,10 +12,13 @@ function issueJWT(userInstance: SecureUserClass): string {
 		_id: userInstance._id,
 		expiresIn: env.JWT_EXPIRY,
 	};
-	const signedToken = jwt.sign(payload, env.PRIVATE_KEY, { expiresIn: env.JWT_EXPIRY, algorithm: 'RS256' });
-
+	const signedToken = sign(payload, env.PRIVATE_KEY, { expiresIn: env.JWT_EXPIRY, algorithm: 'RS256' });
+	
 	return `Bearer ${signedToken}`;
+}
+function verifyJWT(token: string): string | JwtPayload {
+	return verify(token, env.PUBLIC_KEY, { algorithms: ['RS256'] });
 }
 
 // ! Exports
-export { issueJWT };
+export { issueJWT, verifyJWT };

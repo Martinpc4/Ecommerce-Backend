@@ -18,7 +18,7 @@ passport.deserializeUser(async (user: any, done) => {
 	done(null, await UsersDAO.getSecureById(user._id));
 });
 
-// * Strategies Implementation 
+// * Strategies Implementation
 passport.use('login', LoginLocalStrategy);
 passport.use('signup', SignupLocalStrategy);
 passport.use('facebook', FacebookSrategy);

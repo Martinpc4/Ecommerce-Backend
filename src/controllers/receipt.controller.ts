@@ -11,7 +11,7 @@ import UsersController from './user.controller';
 import ReceiptsDAO from '../daos/receipts.daos';
 // * Services
 import mongoose from '../services/mongodb.services';
-import { adminMail, etherealTransporter, mailOptions } from '../services/ethereal.services';
+import { adminMail, etherealTransporter, mailOptions } from '../services/nodemon.services';
 // * Utils
 import env from '../utils/env.utils';
 
@@ -47,27 +47,28 @@ class ReceiptController {
 		});
 
 		const receiptInstanced: ReceiptClass = await ReceiptsDAO.create(receiptInstance);
-		
+
 		await UsersController.linkCartToUserById(userId, null);
 		await CartsController.deactivateCart(cartInstance._id);
 
 		if (!(await UsersController.existsCartLinkedById(userId)) && (await this.exists(receiptInstance._id))) {
 			// Send receipt to user
 			await UsersController.sendMailById(userId, String(
-				await ejs.renderFile(__dirname.replace('dist/controllers', 'src/views/pages/receipt.ejs'), {
+				await ejs.renderFile(__dirname.replace('dist', 'src\\views\\pages\\receipt.ejs'), {
 					serverAddress: env.SERVER_ADDRESS,
 					receiptId: receiptInstance._id,
 					products: cartInstance.products,
 					total: cartInstance.total,
 				})
 			), 'Import BA - Receipt');
+
 			// Notice of new purchase to admin
 			await etherealTransporter.sendMail({
 				...mailOptions,
 				to: adminMail,
 				subject: '[Import BA] - New Purchase',
 				html: String(
-					await ejs.renderFile(__dirname.replace('dist/controllers', 'src/views/pages/receipt.ejs'), {
+					await ejs.renderFile(__dirname.replace('dist', 'src\\views\\pages\\receipt.ejs'), {
 						serverAddress: env.SERVER_ADDRESS,
 						receiptId: receiptInstance._id,
 						products: cartInstance.products,
@@ -75,7 +76,7 @@ class ReceiptController {
 					})
 				),
 			});
-			return receiptInstance;
+			return receiptInstanced;
 		} else {
 			throw new Error('Internal Server Error');
 		}

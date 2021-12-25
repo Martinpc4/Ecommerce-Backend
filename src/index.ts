@@ -41,7 +41,7 @@ app.use(
 		secret: env.COOKIE_SESSION_SECRET,
 		store: mongoStore.create({
 			mongoUrl: env.MONGODB_URI,
-			collectionName: 'sessions'
+			collectionName: 'sessions',
 		}),
 		cookie: {
 			httpOnly: false,
@@ -66,7 +66,7 @@ app.use('/', MAIN);
 app.use('/api', API);
 app.use('/api/carts', CART);
 app.use('/auth', AUTH);
-app.use('/users', USER);
+app.use('/api/users', USER);
 
 // ! Clusters & Express Servers Initialization
 
@@ -75,7 +75,7 @@ if (cluster.isPrimary) {
 	for (let i = 0; i < os.cpus().length / 2 && i < 4; i++) {
 		cluster.fork();
 	}
-	cluster.on('exit', (worker, code, signal) => {
+	cluster.on('exit', (worker, _code, _signal) => {
 		logger.info(`Worker [PID: ${worker.process.pid}] died`);
 	});
 } else {

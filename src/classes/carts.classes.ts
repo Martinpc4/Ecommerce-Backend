@@ -3,9 +3,11 @@
 import { ProductClass } from './products.classes';
 // * Data Access Objects
 import ProductsDAO from '../daos/products.daos';
+// * Controllers
+import ProductsController from '../controllers/product.controller';
 // * Types
 import { cartPropertiesInterface } from '../interfaces/carts.interfaces';
-import { cartProductsInterface } from '../interfaces/products.interfaces';
+import { cartProductsInterface, productPropertiesInterface } from '../interfaces/products.interfaces';
 // * Services
 import mongoose from '../services/mongodb.services';
 
@@ -103,6 +105,15 @@ class CartClass {
 		} else {
 			throw new Error(`El producto con el id: ${productId}, no se encuenta en el carrito`);
 		}
+	}
+	async validateStock(): Promise<boolean> {
+		let flagVar: boolean = true;
+		this.products.forEach(async (product: cartProductsInterface) => {
+			if (!(await ProductsController.isValidProduct(product))){
+				flagVar = false;
+			}
+		});
+		return flagVar;
 	}
 }
 

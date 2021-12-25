@@ -78,25 +78,17 @@ class UsersDAO {
 			await UsersModel.findByIdAndUpdate(userId, { ...unsecureUserInstance, ...secureUserInstance });
 			const updatedUser: SecureUserClass | null = await this.getSecureById(userId);
 			if (updatedUser === null) {
-				throw new Error(`User [_id: ${userId}] was not updated`);
+				throw new Error(`User [_id: ${userId}] was deleted by error`);
 			}
 			return updatedUser;
 		}
 	}
-	async updateUnsecureById(
-		userId: mongoose.Types.ObjectId,
-		unsecureInstance: UnsecureUserClass
-	): Promise<SecureUserClass> {
+	async updatePasswordById(userId: mongoose.Types.ObjectId, hashedPassword: string): Promise<void> {
 		const unsecureUserInstance: UnsecureUserClass | null = await this.getUnsecureById(userId);
 		if (unsecureUserInstance === null) {
 			throw new Error('User not found');
 		} else {
-			await UsersModel.findByIdAndUpdate(userId, { ...unsecureUserInstance, ...unsecureInstance });
-			const updatedUser: SecureUserClass | null = await this.getSecureById(userId);
-			if (updatedUser === null) {
-				throw new Error(`User [_id: ${userId}] was not updated`);
-			}
-			return updatedUser;
+			await UsersModel.findByIdAndUpdate(userId, { ...unsecureUserInstance, password: hashedPassword });
 		}
 	}
 	// Create Methods

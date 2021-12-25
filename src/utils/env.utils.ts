@@ -1,6 +1,7 @@
 // ! Imports
 // * Modules
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 // ! Environment Varaibles Config
 // * Configure dotenv to load variables from the .env file
@@ -93,8 +94,8 @@ const environmentVariables = {
 	NODEMAILER_PASSWORD_DEV: process.env.NODEMAILER_PASSWORD_DEV,
 	NODEMAILER_HOST_DEV: process.env.NODEMAILER_HOST_DEV,
 	// Cryptography
-	PUBLIC_KEY: process.env.PUBLIC_KEY,
-	PRIVATE_KEY: process.env.PRIVATE_KEY,
+	PUBLIC_KEY: `${process.env.PUBLIC_KEY}`.replace(/\\n/g, '\n'),
+	PRIVATE_KEY: `${process.env.PRIVATE_KEY}`.replace(/\\n/g, '\n'),
 };
 
 // ! Exports
