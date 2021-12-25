@@ -162,7 +162,7 @@ USER.post('/verify', passport.authenticate('jwt', { session: false }), async (re
 			} else {
 				res.status(400).json({ success: false, message: 'Verification Failed' });
 				logger.notice({
-					message: 'Verficiation Failed',
+					message: 'Verification Failed',
 					router: 'AUTH',
 					method: 'POST',
 					route: '/:userId/verify_email/:verificationCode',

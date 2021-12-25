@@ -43,18 +43,18 @@ AUTH.get('/faillogin', (req: Request, res: Response) => {
 // Sign Up
 AUTH.post(
 	'/signup',
-	multer({
-		storage: multer.diskStorage({
-			destination: path.join(__dirname, '../public/images/avatars/profile'),
-			filename: (req: Request, file, cb) => {
-				if (file.mimetype !== 'image/png' && file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/jpg') {
-					return cb(new Error('Only PNG, JPG and JPEG are allowed'), null);
-				}
-				cb(null, `${req.body.email}.jpg`);
-			},
-		}),
-		dest: path.join(__dirname, '../../public/images/avatars/profile'),
-	}),
+	// multer({
+	// 	storage: multer.diskStorage({
+	// 		destination: path.join(__dirname, '../public/images/avatars/profile'),
+	// 		filename: (req: Request, file, cb) => {
+	// 			if (file.mimetype !== 'image/png' && file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/jpg') {
+	// 				return cb(new Error('Only PNG, JPG and JPEG are allowed'), null);
+	// 			}
+	// 			cb(null, `${req.body.email}.jpg`);
+	// 		},
+	// 	}),
+	// 	dest: path.join(__dirname, '../public/images/avatars/profile'),
+	// }),
 	passport.authenticate('signup', { failureRedirect: '/auth/failsignup' }),
 	(req: Request, res: Response) => {
 		const userSessionData: any = req.user;

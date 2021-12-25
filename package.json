@@ -6,7 +6,7 @@
     "scripts": {
         "build-dev": "webpack --mode development",
         "build": "webpack --mode production",
-        "watch": "webpack --mode production -w",
+        "watch": "webpack --mode development -w",
         "start-dev": "nodemon ./dist/bundle.js",
         "start": "node ./dist/bundle.js"
     },
