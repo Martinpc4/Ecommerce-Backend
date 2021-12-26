@@ -15,12 +15,12 @@ import mongoose from '../services/mongodb.services';
 
 // ! Route Definition
 
-// * USER Router
-const USER: Router = Router();
+// * USERS Router
+const USERS: Router = Router();
 
-// * USER Routes
+// * USERS Routes
 // Get user profile
-USER.get('/profile', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
+USERS.get('/profile', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
@@ -29,14 +29,14 @@ USER.get('/profile', passport.authenticate('jwt', { session: false }), async (re
 		res.status(200).json(userInstance);
 		logger.http({
 			message: 'User profile requested and sent',
-			router: 'USER',
+			router: 'USERS',
 			method: 'GET',
 			route: '/',
 		});
 	} catch (err) {
 		logger.error({
 			message: 'Get user profile failed',
-			router: 'USER',
+			router: 'USERS',
 			method: 'GET',
 			route: '/',
 			stack: err,
@@ -45,7 +45,7 @@ USER.get('/profile', passport.authenticate('jwt', { session: false }), async (re
 	}
 });
 // Update user profile
-USER.put('/update/profile', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
+USERS.put('/update/profile', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
@@ -59,14 +59,14 @@ USER.put('/update/profile', passport.authenticate('jwt', { session: false }), as
 		res.status(200).send('User profile updated correctly');
 		logger.http({
 			message: 'User profile updated',
-			router: 'USER',
+			router: 'USERS',
 			method: 'PUT',
 			route: '/',
 		});
 	} catch (err) {
 		logger.error({
 			message: 'Update user profile failed',
-			router: 'USER',
+			router: 'USERS',
 			method: 'PUT',
 			route: '/update/profile',
 			stack: err,
@@ -75,7 +75,7 @@ USER.put('/update/profile', passport.authenticate('jwt', { session: false }), as
 	}
 });
 // Update user's password
-USER.put('/update/password', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
+USERS.put('/update/password', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
@@ -91,7 +91,7 @@ USER.put('/update/password', passport.authenticate('jwt', { session: false }), a
 		if (passwords.oldPassword === undefined || passwords.newPassword === undefined) {
 			logger.error({
 				message: 'Update user profile password failed',
-				router: 'USER',
+				router: 'USERS',
 				method: 'PUT',
 				route: '/update/profile',
 				stack: 'Missing password fields',
@@ -104,14 +104,14 @@ USER.put('/update/password', passport.authenticate('jwt', { session: false }), a
 				res.status(200).send('User password updated correctly');
 				logger.http({
 					message: 'User profile updated',
-					router: 'USER',
+					router: 'USERS',
 					method: 'PUT',
 					route: '/update/password',
 				});
 			} else {
 				logger.error({
 					message: 'Update user password failed',
-					router: 'USER',
+					router: 'USERS',
 					method: 'PUT',
 					route: '/update/profile',
 					stack: 'Incorrect password',
@@ -122,7 +122,7 @@ USER.put('/update/password', passport.authenticate('jwt', { session: false }), a
 	} catch (err) {
 		logger.error({
 			message: 'Update user password failed',
-			router: 'USER',
+			router: 'USERS',
 			method: 'PUT',
 			route: '/',
 			stack: err,
@@ -131,7 +131,7 @@ USER.put('/update/password', passport.authenticate('jwt', { session: false }), a
 	}
 });
 // Verify user's email
-USER.post('/verify', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
+USERS.post('/verify', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
 	try {
 		const userInstance: any | undefined = req.user;
 		if (userInstance === undefined) {
@@ -141,7 +141,7 @@ USER.post('/verify', passport.authenticate('jwt', { session: false }), async (re
 			res.status(400).json({ success: false, message: 'Invalid verification code' });
 			logger.notice({
 				message: 'Invalid verification code',
-				router: 'USER',
+				router: 'USERS',
 				method: 'POST',
 				route: '/verify',
 			});
@@ -181,7 +181,7 @@ USER.post('/verify', passport.authenticate('jwt', { session: false }), async (re
 	}
 });
 // Send verification code via email to user
-USER.post(
+USERS.post(
 	'/verification_code',
 	passport.authenticate('jwt', { session: false }),
 	async (req: Request, res: Response) => {
@@ -198,14 +198,14 @@ USER.post(
 			res.status(200).json({ success: true, message: 'Verification code sent' });
 			logger.notice({
 				message: 'Verification code sent',
-				router: 'USER',
+				router: 'USERS',
 				method: 'POST',
 				route: '/verification_code',
 			});
 		} catch (err) {
 			logger.error({
 				message: 'Error in sending verification code',
-				router: 'USER',
+				router: 'USERS',
 				method: 'POST',
 				route: '/verification_code',
 				stack: err,
@@ -216,4 +216,4 @@ USER.post(
 );
 
 // ! Exports
-export default USER;
+export default USERS;

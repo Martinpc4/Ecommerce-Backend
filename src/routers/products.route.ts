@@ -15,10 +15,10 @@ import mongoose from '../services/mongodb.services';
 // ! Route Definition
 
 // * API Router
-const API: Router = Router();
+const PRODUCTS: Router = Router();
 
 // * API Routes
-API.get('/products/', async (req: Request, res: Response) => {
+PRODUCTS.get('/', async (req: Request, res: Response) => {
 	try {
 		logger.http({
 			message: 'Product list requested and sent',
@@ -38,7 +38,7 @@ API.get('/products/', async (req: Request, res: Response) => {
 		res.status(500).send(err);
 	}
 });
-API.get('/products/category/:categoryId', async (req: Request, res: Response) => {
+PRODUCTS.get('/category/:categoryId', async (req: Request, res: Response) => {
 	try {
 		if (req.params.categoryId !== undefined) {
 			const categoryId = Number(req.params.categoryId);
@@ -69,7 +69,7 @@ API.get('/products/category/:categoryId', async (req: Request, res: Response) =>
 		res.status(500).send(err);
 	}
 });
-API.get('/products/:productId', async (req: Request, res: Response) => {
+PRODUCTS.get('/:productId', async (req: Request, res: Response) => {
 	try {
 		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
 		if (!(await ProductsController.existsById(productId))) {
@@ -99,7 +99,7 @@ API.get('/products/:productId', async (req: Request, res: Response) => {
 		res.status(500).send(`[GET] Get products by Id:\n\n${err}`);
 	}
 });
-API.post('/products', isAdmin, async (req: Request, res: Response) => {
+PRODUCTS.post('/', isAdmin, async (req: Request, res: Response) => {
 	try {
 		if (
 			req.body.name !== undefined &&
@@ -168,9 +168,9 @@ API.post('/products', isAdmin, async (req: Request, res: Response) => {
 		res.status(500).send(`[POST] Add products:\n\n${err}`);
 	}
 });
-API.put('/products/:id', isAdmin, async (req: Request, res: Response) => {
+PRODUCTS.put('/:productId', isAdmin, async (req: Request, res: Response) => {
 	try {
-		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.id);
+		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
 		if (!(await ProductsController.existsById(productId))) {
 			logger.notice({
 				router: 'API',
@@ -206,9 +206,9 @@ API.put('/products/:id', isAdmin, async (req: Request, res: Response) => {
 		});
 	}
 });
-API.delete('/products/:id', isAdmin, async (req: Request, res: Response) => {
+PRODUCTS.delete('/:productId', isAdmin, async (req: Request, res: Response) => {
 	try {
-		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.id);
+		const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
 		if (!(await ProductsController.existsById(productId))) {
 			logger.notice({
 				router: 'API',
@@ -250,4 +250,4 @@ API.delete('/products/:id', isAdmin, async (req: Request, res: Response) => {
 });
 
 // ! Exports
-export default API;
+export default PRODUCTS;

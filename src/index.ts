@@ -10,13 +10,14 @@ import mongoStore = require('connect-mongo');
 import cluster from 'cluster';
 import os from 'os';
 // * Routers
-import API from './routers/api.route';
-import CART from './routers/cart.route';
+import PRODUCTS from './routers/products.route';
+import CARTS from './routers/carts.route';
 import AUTH from './routers/auth.route';
 import MAIN from './routers/main.route';
-import USER from './routers/user.route';
+import USERS from './routers/users.route';
 // * Utils
 import env from './utils/env.utils';
+import NEWS from "./routers/newsletter.route";
 
 // ! Express Server
 
@@ -28,6 +29,7 @@ app.use(cors());
 app.use(morgan('dev'));
 
 // Express Body Parser (POST Method)
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
@@ -61,12 +63,13 @@ app.use(passport.session());
 // Static Resources
 app.use('/public', express.static(__dirname.replace('dist', 'public')));
 
-// Routers
+// Routes
 app.use('/', MAIN);
-app.use('/api', API);
-app.use('/api/carts', CART);
+app.use('/api/products', PRODUCTS);
+app.use('/api/carts', CARTS);
+app.use('/api/newsletter', NEWS);
+app.use('/api/users', USERS);
 app.use('/auth', AUTH);
-app.use('/api/users', USER);
 
 // ! Clusters & Express Servers Initialization
 

@@ -20,12 +20,12 @@ import mongoose from '../services/mongodb.services';
 
 // ! Route Definition
 
-// * CART Router
-const CART: Router = Router();
+// * CARTS Router
+const CARTS: Router = Router();
 
-// * CART Routes
+// * CARTS Routes
 // Create new cart
-CART.post('/', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
+CARTS.post('/', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
     let errorMessages: string[] = [];
     try {
         if (req.body === undefined) {
@@ -99,7 +99,7 @@ CART.post('/', passport.authenticate('jwt', {session: false}), async (req: Reque
     }
 });
 // Delete a cart
-CART.delete('/', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
+CARTS.delete('/', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
     try {
         const userInstance: any | undefined = req.user;
         if (userInstance === undefined) {
@@ -153,7 +153,7 @@ CART.delete('/', passport.authenticate('jwt', {session: false}), async (req: Req
     }
 });
 // Get all products from a cart
-CART.get('/products', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
+CARTS.get('/products', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
     try {
         const userInstance: any | undefined = req.user;
         if (userInstance === undefined) {
@@ -194,7 +194,7 @@ CART.get('/products', passport.authenticate('jwt', {session: false}), async (req
     }
 });
 // Get specific product from Cart
-CART.post(
+CARTS.post(
     '/products/:productId',
     passport.authenticate('jwt', {session: false}),
     async (req: Request, res: Response) => {
@@ -255,7 +255,7 @@ CART.post(
     }
 );
 // Modify products in a Cart
-CART.put(
+CARTS.put(
     '/products/:productId',
     passport.authenticate('jwt', {session: false}),
     async (req: Request, res: Response) => {
@@ -332,7 +332,7 @@ CART.put(
     }
 );
 // Add a Product to Cart
-CART.post('/products', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
+CARTS.post('/products', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
     try {
         const userInstance: any | undefined = req.user;
         if (userInstance === undefined) {
@@ -419,7 +419,7 @@ CART.post('/products', passport.authenticate('jwt', {session: false}), async (re
     }
 });
 // Delete a Product from Cart
-CART.delete(
+CARTS.delete(
     '/products/:productId',
     passport.authenticate('jwt', {session: false}),
     async (req: Request, res: Response) => {
@@ -429,7 +429,6 @@ CART.delete(
                 throw new Error('Internal Server Error: Unauthorized user access');
             }
             const productId: mongoose.Types.ObjectId = new mongoose.Types.ObjectId(req.params.productId);
-            // TODO FINISH THIS
             if (
                 (await CartsController.exists(userInstance.cartId)) &&
                 (await ProductsController.existsById(productId))
@@ -522,7 +521,7 @@ CART.delete(
     }
 );
 // Delete all products
-CART.delete('/products', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
+CARTS.delete('/products', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
     try {
         const userInstance: any | undefined = req.user;
         if (userInstance === undefined) {
@@ -574,7 +573,7 @@ CART.delete('/products', passport.authenticate('jwt', {session: false}), async (
     }
 });
 // Checkout a Cart
-CART.post('/checkout', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
+CARTS.post('/checkout', passport.authenticate('jwt', {session: false}), async (req: Request, res: Response) => {
     try {
         const userInstance: any | undefined = req.user;
         if (userInstance === undefined) {
@@ -638,4 +637,4 @@ CART.post('/checkout', passport.authenticate('jwt', {session: false}), async (re
 });
 
 // ! Exports
-export default CART;
+export default CARTS;
