@@ -13,10 +13,8 @@ class CartsDAO {
 	constructor() {}
 	async existsById(cartId: mongoose.Types.ObjectId): Promise<boolean> {
 		const cartDocument: cartPropertiesInterface | null = await CartModel.findById(cartId);
-		if (cartDocument === null) {
-			return false;
-		}
-		return true;
+		return cartDocument !== null;
+
 	}
 	async getById(cartId: mongoose.Types.ObjectId): Promise<CartClass | null> {
 		const cartDocument: any | null = await CartModel.findById(cartId);

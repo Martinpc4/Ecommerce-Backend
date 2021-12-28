@@ -8,7 +8,7 @@ import logger from '../logs/index.logs';
 import env from '../utils/env.utils';
 
 // ! MongoDB Connection
-if (cluster.isPrimary !== true) {
+if (!cluster.isPrimary) {
 	mongoose.connect(env.MONGODB_URI, (err) => {
 		if (!err) {
 			logger.info(`Worker [PID: ${process.pid}] connected to MongoDB`);

@@ -13,10 +13,8 @@ class ProductsDAO {
 	constructor() {}
 	async existsById(productId: mongoose.Types.ObjectId): Promise<boolean> {
 		const productDocument: productPropertiesInterface | null = await ProductsModel.findById(productId);
-		if (productDocument === null) {
-			return false;
-		}
-		return true;
+		return productDocument !== null;
+
 	}
 	async getById(productId: mongoose.Types.ObjectId): Promise<ProductClass> {
 		if (await this.existsById(productId)) {

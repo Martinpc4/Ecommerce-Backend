@@ -19,7 +19,7 @@ function buildProdLogger() {
 		trace: 6,
 	};
 
-	const ProdLogger = createLogger({
+	return createLogger({
 		level: env.LOGGER_LEVEL || 'trace',
 		levels: logLevels,
 		format: format.combine(format.timestamp({ format: 'DD-MM-YYYY HH:mm:ss' }), format.errors({ stack: true })),
@@ -28,8 +28,6 @@ function buildProdLogger() {
 			new transports.File({ level: 'http', filename: '/prod.log' }),
 		],
 	});
-
-	return ProdLogger;
 }
 
 // ! Exports

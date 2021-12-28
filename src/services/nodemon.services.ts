@@ -7,8 +7,8 @@ import env from '../utils/env.utils';
 
 // ! Service's Variables
 const adminMail: string = 'adminMail@mail.com';
-let mailOptions: MailOptions = {};
-let transportOptions: any = {};
+let mailOptions: MailOptions;
+let transportOptions: any;
 
 if (env.NODE_ENV === 'production') {
     transportOptions = {

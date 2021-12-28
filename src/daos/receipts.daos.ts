@@ -12,11 +12,7 @@ import mongoose from '../services/mongodb.services';
 class ReceiptsDAO {
 	constructor() {}
 	async existsById(receiptId: mongoose.Types.ObjectId): Promise<boolean> {
-		if ((await ReceiptsModel.findById(receiptId)) !== null) {
-			return true;
-		} else {
-			return false;
-		}
+		return (await ReceiptsModel.findById(receiptId)) !== null;
 	}
 	async create(receiptInstance: ReceiptClass): Promise<ReceiptClass> {
 		if (!(await this.existsById(receiptInstance._id))) {
