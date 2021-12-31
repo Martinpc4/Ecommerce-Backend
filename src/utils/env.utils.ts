@@ -28,9 +28,6 @@ if (process.env.JWT_EXPIRY === undefined) {
 if (process.env.COOKIE_SESSION_SECRET === undefined) {
     throw new Error('COOKIE_SESSION_SECRET is not defined');
 }
-if (process.env.HOME_ROUTE === undefined) {
-    throw new Error('HOME_ROUTE is not defined');
-}
 if (process.env.FACEBOOK_APP_ID === undefined) {
     throw new Error('FACEBOOK_APP_ID is not defined');
 }
@@ -69,7 +66,6 @@ const environmentVariables = {
     // Internal Server Variables
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
-    HOME_ROUTE: process.env.HOME_ROUTE,
     SERVER_ADDRESS: process.env.SERVER_ADDRESS,
     // Logger Variables
     LOGGER_LEVEL: process.env.LOGGER_LEVEL,

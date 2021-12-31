@@ -1,6 +1,5 @@
 // ! Imports
 // * Modules
-import ejs from 'ejs';
 // * Classes
 import {SecureUserClass, UnsecureUserClass} from '../classes/users.classes';
 // * Data Access Objects
@@ -63,14 +62,7 @@ class UserControllerClass {
 
             await this.sendMailById(
                 userProperties._id,
-                String(
-                    await ejs.renderFile(
-                        `${__dirname}/views/pages/email_verification.ejs`,
-                        {
-                            emailVerificationCode: userProperties.email.verification_code,
-                        }
-                    )
-                ),
+                String(userProperties.email.verification_code),
                 'Import BA - Email Verification'
             );
             return true;
@@ -260,7 +252,7 @@ class UserControllerClass {
         }
     }
 
-    // User's Github Methods
+    // User's GitHub Methods
     async existsByGithubId(githubId: string): Promise<boolean> {
         try {
             return (await UsersDAO.getSecureByGithubId(githubId)) !== null;

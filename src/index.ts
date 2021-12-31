@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import logger from './logs/index.logs';
 import cluster from 'cluster';
 import os from 'os';
+import swaggerUi from 'swagger-ui-express';
 // * Routers
 import PRODUCTS from './routers/products.route';
 import CARTS from './routers/carts.route';
@@ -17,6 +18,7 @@ import USERS from './routers/users.route';
 // * Utils
 import env from './utils/env.utils';
 import NEWS from "./routers/newsletter.route";
+import swaggerData from './utils/swagger.utils';
 import mongoStore = require('connect-mongo');
 
 // ! Express App Instance
@@ -59,11 +61,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// * Static Resources
 app.use('/public', express.static(__dirname.replace('dist', 'public')));
-
 // * Routes
+
 app.use('/', MAIN);
+app.use('/api/doc', swaggerUi.serve, swaggerUi.setup(swaggerData));
 app.use('/api/products', PRODUCTS);
 app.use('/api/carts', CARTS);
 app.use('/api/newsletter', NEWS);

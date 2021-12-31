@@ -1,9 +1,9 @@
 // ! Imports
 // * Types
 import {
-	cartProductsInterface,
-	genericProductPropertiesInterface,
-	productPropertiesInterface,
+    cartProductsInterface,
+    genericProductPropertiesInterface,
+    productPropertiesInterface,
 } from '../interfaces/products.interfaces';
 // * Services
 import mongoose from '../services/mongodb.services';

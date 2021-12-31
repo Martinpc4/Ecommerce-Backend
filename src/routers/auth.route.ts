@@ -27,7 +27,7 @@ AUTH.post(
     (req: Request, res: Response) => {
         const userSessionData: any = req.user;
         if (userSessionData === undefined) {
-            res.status(401).send('Unauthorized');
+            res.status(500).send('Could not authenticate the user');
         } else {
             const token: string = issueJWT(new SecureUserClass(userSessionData));
             res.status(200).json({token, expiresIn: env.JWT_EXPIRY});
@@ -84,7 +84,7 @@ AUTH.get(
     }
 );
 
-// * Github Auth
+// * GitHub Auth
 // Login
 AUTH.get('/github/login', passport.authenticate('github', {scope: ['user:email']}));
 AUTH.get(
