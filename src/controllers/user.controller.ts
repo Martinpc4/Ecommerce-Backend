@@ -1,354 +1,213 @@
 // ! Imports
 // * Modules
-// * Classes
-import {SecureUserClass, UnsecureUserClass} from '../classes/users.classes';
-// * Data Access Objects
-import UsersDAO from '../daos/users.daos';
-// * Types
-import {userPropertiesInterface} from '../interfaces/users.interfaces';
+import ejs from 'ejs';
+// * DTOs
+import { SecureUserClass } from '../models/DTOs/user.dto';
+// * Interfaces
+import { Request, Response } from 'express';
+import { Types } from 'mongoose';
+// * Logs
+import logger from '../server/logs/index.logs';
 // * Services
-import mongoose from '../services/mongodb.services';
-import {etherealTransporter, mailOptions} from '../services/nodemon.services';
+import UserService from '../services/user.service';
 // * Utils
-import {compareHashedPassword, hashPassword} from '../utils/crypto.utils';
+import env from '../utils/env.utils';
 
 // ! Controller Definition
 class UserControllerClass {
-    constructor() {
-    }
+	constructor() {}
+	async getProfile(req: Request, res: Response): Promise<void> {
+		try {
+			const userInstance: any | undefined = req.user;
+			if (userInstance === undefined) {
+				throw new Error('Internal Server Error');
+			}
+			res.status(200).json(userInstance);
+			logger.http({
+				message: 'User profile requested and sent',
+				router: 'USERS',
+				method: 'GET',
+				route: '/',
+			});
+		} catch (err) {
+			logger.error({
+				message: 'Get user profile failed',
+				router: 'USERS',
+				method: 'GET',
+				route: '/',
+				stack: err,
+			});
+			res.status(500).send(err);
+		}
+	}
+	async updateProfile(req: Request, res: Response): Promise<void> {
+		try {
+			const userInstance: any | undefined = req.user;
+			if (userInstance === undefined) {
+				throw new Error('Internal Server Error: Unauthorised user access');
+			}
 
-    async existsById(userId: mongoose.Types.ObjectId): Promise<boolean> {
-        try {
-            return (await UsersDAO.getSecureById(userId)) !== null;
+			const newSecureUserInstance: SecureUserClass = new SecureUserClass(req.body);
 
-        } catch (err) {
-            throw new Error(`\n"existsById" Error: ${err}`);
-        }
-    }
+			await UserService.updateSecureUser(userInstance._id, newSecureUserInstance);
 
-    async existsByEmail(email: string): Promise<boolean> {
-        try {
-            return (await UsersDAO.getSecureByEmail(email)) !== null;
+			res.status(200).send('User profile updated correctly');
+			logger.http({
+				message: 'User profile updated',
+				router: 'USERS',
+				method: 'PUT',
+				route: '/',
+			});
+		} catch (err) {
+			logger.error({
+				message: 'Update user profile failed',
+				router: 'USERS',
+				method: 'PUT',
+				route: '/update/profile',
+				stack: err,
+			});
+			res.status(500).send(err);
+		}
+	}
+	async updatePassword(req: Request, res: Response): Promise<void> {
+		try {
+			const userInstance: any | undefined = req.user;
+			if (userInstance === undefined) {
+				throw new Error('Internal Server Error: Unauthorised user access');
+			}
 
-        } catch (err) {
-            throw new Error(`\n"existsByEmail" Error: ${err}`);
-        }
-    }
+			const passwords: {
+				oldPassword: string;
+				newPassword: string;
+			} = req.body;
 
-    async sendMailById(userId: mongoose.Types.ObjectId, content: string, subject: string): Promise<void> {
-        try {
-            if (await this.existsById(userId)) {
-                const secureUserInstance: SecureUserClass | null = await UsersDAO.getSecureById(userId);
-                if (secureUserInstance === null) {
-                    throw new Error('Internal server error: user not found');
-                }
-                await etherealTransporter.sendMail({
-                    ...mailOptions,
-                    to: String(secureUserInstance.email.email),
-                    subject: subject,
-                    html: content,
-                });
-            } else {
-                throw new Error('User not found');
-            }
-        } catch (err) {
-            throw new Error(`\n"sendMailById" Error: ${err}`);
-        }
-    }
+			if (passwords.oldPassword === undefined || passwords.newPassword === undefined) {
+				logger.error({
+					message: 'Update user profile password failed',
+					router: 'USERS',
+					method: 'PUT',
+					route: '/update/profile',
+					stack: 'Missing password fields',
+				});
+				res.status(404).send('Missing password fields');
+			} else {
+				if (await UserService.verifyPassword(userInstance._id, passwords.oldPassword)) {
+					await UserService.updatePassword(userInstance._id, passwords.newPassword);
 
-    async createUser(userProperties: userPropertiesInterface): Promise<boolean> {
-        try {
-            await UsersDAO.create(new UnsecureUserClass(userProperties));
+					res.status(200).send('User password updated correctly');
+					logger.http({
+						message: 'User profile updated',
+						router: 'USERS',
+						method: 'PUT',
+						route: '/update/password',
+					});
+				} else {
+					logger.error({
+						message: 'Update user password failed',
+						router: 'USERS',
+						method: 'PUT',
+						route: '/update/profile',
+						stack: 'Incorrect password',
+					});
+					res.status(401).send("Incorrect user's old password");
+				}
+			}
+		} catch (err) {
+			logger.error({
+				message: 'Update user password failed',
+				router: 'USERS',
+				method: 'PUT',
+				route: '/',
+				stack: err,
+			});
+			res.status(500).send(err);
+		}
+	}
+	async verifyEmail(req: Request, res: Response): Promise<void> {
+		try {
+			const userInstance: any | undefined = req.user;
+			if (userInstance === undefined) {
+				throw new Error('Internal Server Error: Unauthorised user access');
+			}
+			if (req.body.verificationCode === undefined) {
+				res.status(400).send('Invalid verification code');
+				logger.notice({
+					message: 'Invalid verification code',
+					router: 'USERS',
+					method: 'POST',
+					route: '/verify',
+				});
+			} else {
+				const userVerificationCode: Types.ObjectId = new Types.ObjectId(req.body.verificationCode);
 
-            await this.sendMailById(
-                userProperties._id,
-                String(userProperties.email.verification_code),
-                'Import BA - Email Verification'
-            );
-            return true;
-        } catch (err) {
-            throw new Error(`\n"createUser" Error: ${err}`);
-        }
-    }
-
-    async removeUser(userId: mongoose.Types.ObjectId): Promise<void> {
-        try {
-            if (await this.existsById(userId)) {
-                await UsersDAO.deleteById(userId);
-                if (!(await this.existsById(userId))) {
-                    throw new Error('Remove user request failed: user not successfully removed');
-                }
-            } else {
-                throw new Error('"removeUser" Error : userId not found');
-            }
-        } catch (err) {
-            throw new Error(`\n"removeUser" Error: $\n\n{err}`);
-        }
-    }
-
-    async getSecureByUsername(username: string): Promise<SecureUserClass> {
-        try {
-            if (await this.existsByEmail(username)) {
-                const userInstance: SecureUserClass | null = await UsersDAO.getSecureByEmail(username);
-                if (userInstance === null) {
-                    throw new Error('User not found');
-                }
-                return userInstance;
-            } else {
-                throw new Error('Get user request failed: user not found');
-            }
-        } catch (err) {
-            throw new Error(`\n"getUserByUsername" Error: ${err}`);
-        }
-    }
-
-    async updatePassword(userId: mongoose.Types.ObjectId, password: string): Promise<void> {
-        try {
-            if (await this.existsById(userId)) {
-                await UsersDAO.updatePasswordById(userId, await hashPassword(password));
-            } else {
-                throw new Error('Update user request failed: user not found');
-            }
-        } catch (err) {
-            throw new Error(`\n"updateUser" Error: ${err}`);
-        }
-    }
-
-    async updateSecureUser(userId: mongoose.Types.ObjectId, newUserInstance: SecureUserClass): Promise<void> {
-        try {
-            if (await this.existsById(userId)) {
-                const secureUserInstance: SecureUserClass | null = await UsersDAO.getSecureById(userId);
-
-                if (secureUserInstance === null) {
-                    throw new Error('Internal server error: user not found');
-                }
-
-                if (newUserInstance.email.email !== secureUserInstance.email.email) {
-                    await UsersDAO.updateSecureById(userId, {
-                        ...secureUserInstance,
-                        ...newUserInstance,
-                        email: {
-                            ...secureUserInstance.email,
-                            ...newUserInstance.email,
-                            verified: false,
-                            verification_code: new mongoose.Types.ObjectId(),
-                        },
-                    });
-                } else {
-                    await UsersDAO.updateSecureById(userId, {...secureUserInstance, ...newUserInstance});
-                }
-            } else {
-                throw new Error('Update user request failed: user not found');
-            }
-        } catch (err) {
-            throw new Error(`\n"updateUser" Error: ${err}`);
-        }
-    }
-
-    // User's Cart Methods
-    async existsCartLinkedById(userId: mongoose.Types.ObjectId): Promise<mongoose.Types.ObjectId | null> {
-        try {
-            const userInstance: SecureUserClass | null = await UsersDAO.getSecureById(userId);
-            if (userInstance === null) {
-                throw new Error('User not found');
-            } else {
-                if (userInstance.cartId !== null) {
-                    return userInstance.cartId;
-                }
-                return null;
-            }
-        } catch (err) {
-            throw new Error(`\n"existsCartLinkedById" Error: ${err}`);
-        }
-    }
-
-    async linkCartToUserById(
-        userId: mongoose.Types.ObjectId,
-        cartId: mongoose.Types.ObjectId | null
-    ): Promise<boolean> {
-        try {
-            if (await this.existsById(userId)) {
-                const userInstance: SecureUserClass | null = await UsersDAO.getSecureById(userId);
-
-                if (userInstance === null) {
-                    throw new Error('Internal server error: user not found');
-                }
-
-                await UsersDAO.updateSecureById(userId, {...userInstance, cartId: cartId});
-
-                const cartIdFound: mongoose.Types.ObjectId | null = await this.existsCartLinkedById(userId);
-                if (cartIdFound === null && cartId === null) {
-                    return true;
-                } else if (cartIdFound !== null && cartId !== null && cartIdFound._id.equals(cartId)) {
-                    return true;
-                } else {
-                    throw new Error('Link cart to user request failed: cart not successfully linked');
-                }
-            } else {
-                throw new Error('Link cart to user request failed: user not found');
-            }
-        } catch (err) {
-            throw new Error(`\n"linkCartToUserById" Error: ${err}`);
-        }
-    }
-
-    // Verify Encrypted Password
-    async verifyPassword(userId: mongoose.Types.ObjectId, password: string): Promise<boolean> {
-        try {
-            if (await this.existsById(userId)) {
-                const userInstance: UnsecureUserClass | null = await UsersDAO.getUnsecureById(userId);
-                if (userInstance === null) {
-                    throw new Error('Internal server error: user not found');
-                }
-                return await compareHashedPassword(password, userInstance.password);
-            } else {
-                throw new Error('Verify password request failed: user not found');
-            }
-        } catch (err) {
-            throw new Error(`\n"verifyPassword" Error: ${err}`);
-        }
-    }
-
-    // Email verification Methods
-    async isEmailVerified(userId: mongoose.Types.ObjectId): Promise<boolean> {
-        if (!(await this.existsById(userId))) {
-            throw new Error('User does not exists');
-        }
-        const productData: SecureUserClass | null = await UsersDAO.getSecureById(userId);
-        if (productData === null) {
-            throw new Error('Internal server error: user not found');
-        }
-        return productData.email.verified;
-    }
-
-    async verifyUserEmail(
-        userId: mongoose.Types.ObjectId,
-        verificationCode: mongoose.Types.ObjectId
-    ): Promise<boolean> {
-        try {
-            if (await this.existsById(userId)) {
-                const secureUserInstance: SecureUserClass | null = await UsersDAO.getSecureById(userId);
-                if (secureUserInstance === null) {
-                    throw new Error('Internal server error: user not found');
-                }
-                if (
-                    secureUserInstance.email.verification_code !== null &&
-                    !secureUserInstance.email.verified &&
-                    secureUserInstance.email.verification_code.equals(verificationCode)
-                ) {
-                    await UsersDAO.updateSecureById(userId, {
-                        ...secureUserInstance,
-                        email: {...secureUserInstance.email, verified: true, verification_code: null},
-                    });
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        } catch (err) {
-            throw new Error(`\n"verifyUserEmail" Error: ${err}`);
-        }
-    }
-
-    // User's GitHub Methods
-    async existsByGithubId(githubId: string): Promise<boolean> {
-        try {
-            return (await UsersDAO.getSecureByGithubId(githubId)) !== null;
-
-        } catch (err) {
-            throw new Error(`\n"existsByGithubId" Error: ${err}`);
-        }
-    }
-
-    async getSecureByGithubId(githubId: string): Promise<SecureUserClass> {
-        try {
-            if (!(await this.existsByGithubId(githubId))) {
-                throw new Error('Github account is not linked to any user');
-            }
-            const userInstance: SecureUserClass | null = await UsersDAO.getSecureByGithubId(githubId);
-            if (userInstance === null) {
-                throw new Error('Internal server error: user not found');
-            }
-            return userInstance;
-        } catch (err) {
-            throw new Error(`\n"getUserByGithubId" Error: ${err}`);
-        }
-    }
-
-    async linkGithubAccount(userId: mongoose.Types.ObjectId, githubId: string): Promise<void> {
-        try {
-            if (!(await this.existsById(userId))) {
-                throw new Error('Link github account request failed: user not found');
-            }
-            if (await this.existsByGithubId(githubId)) {
-                throw new Error('Link github account request failed: github account already linked to another user');
-            }
-            const secureUserInstance: SecureUserClass | null = await UsersDAO.getSecureById(userId);
-            if (secureUserInstance === null) {
-                throw new Error('Internal server error: user not found');
-            }
-            await UsersDAO.updateSecureById(userId, {
-                ...secureUserInstance,
-                linkedAccounts: {...secureUserInstance.linkedAccounts, github: githubId},
-            });
-        } catch (err) {
-            throw new Error(`\n"linkGithubAccount" Error: ${err}`);
-        }
-    }
-
-    // User's Facebook Methods
-    async existsByFacebookId(facebookId: string): Promise<boolean> {
-        try {
-            return (await UsersDAO.getSecureByFacebookId(facebookId)) !== null;
-
-        } catch (err) {
-            throw new Error(`\n"existsByFacebookId" Error: ${err}`);
-        }
-    }
-
-    async getUserByFacebookId(facebookId: string): Promise<SecureUserClass> {
-        try {
-            if (!(await this.existsByFacebookId(facebookId))) {
-                throw new Error('Facebook account is not linked to any user');
-            }
-            const userInstance: SecureUserClass | null = await UsersDAO.getSecureByFacebookId(facebookId);
-            if (userInstance === null) {
-                throw new Error('Internal server error: user not found');
-            }
-            return userInstance;
-        } catch (err) {
-            throw new Error(`\n"getUserByFacebookId" Error: ${err}`);
-        }
-    }
-
-    async linkFacebookAccount(userId: mongoose.Types.ObjectId, facebookId: string): Promise<void> {
-        try {
-            if (!(await this.existsById(userId))) {
-                throw new Error('Link facebook account request failed: user not found');
-            }
-            if (await this.existsByFacebookId(facebookId)) {
-                throw new Error(
-                    'Link facebook account request failed: facebook account already linked to another user'
-                );
-            }
-            const secureUserInstance: SecureUserClass | null = await UsersDAO.getSecureById(userId);
-            if (secureUserInstance === null) {
-                throw new Error('Internal server error: user not found');
-            }
-            await UsersDAO.updateSecureById(userId, {
-                ...secureUserInstance,
-                linkedAccounts: {...secureUserInstance.linkedAccounts, facebook: facebookId},
-            });
-        } catch (err) {
-            throw new Error(`\n"linkFacebookAccount" Error: ${err}`);
-        }
-    }
+				const flagVar: boolean = await UserService.verifyUserEmail(userInstance._id, userVerificationCode);
+				if (flagVar) {
+					res.status(200).send("User's email verified");
+					logger.notice({
+						message: "User's email verified",
+						router: 'AUTH',
+						method: 'POST',
+						route: '/:userId/email_v/:verificationCode',
+					});
+				} else {
+					res.status(500).send('Verification Failed');
+					logger.notice({
+						message: 'Verification Failed',
+						router: 'AUTH',
+						method: 'POST',
+						route: '/:userId/verify_email/:verificationCode',
+					});
+				}
+			}
+		} catch (err) {
+			logger.error({
+				message: 'Error in verifying email',
+				router: 'AUTH',
+				method: 'POST',
+				route: '/:userId/verify_email/:verificationCode',
+				stack: err,
+			});
+			res.status(500).send(err);
+		}
+	}
+	async sendVerificationCode(req: Request, res: Response): Promise<void> {
+		try {
+			const userInstance: any | undefined = req.user;
+			if (userInstance === undefined) {
+				throw new Error('Internal Server Error: Unauthorised user access');
+			}
+			await UserService.sendMailById(
+				userInstance._id,
+				await ejs.renderFile(__dirname.replace('dist', 'src/views/pages/verificationCode.ejs'), {
+					serverAddress: env.BACKEND_URL,
+					name: userInstance.name,
+					lastName: userInstance.lastName,
+					code: userInstance.email.verification_code,
+				}),
+				'Verification Code'
+			);
+			res.status(200).send('Verification code sent');
+			logger.notice({
+				message: 'Verification code sent',
+				router: 'USERS',
+				method: 'POST',
+				route: '/verification_code',
+			});
+		} catch (err) {
+			logger.error({
+				message: 'Error in sending verification code',
+				router: 'USERS',
+				method: 'POST',
+				route: '/verification_code',
+				stack: err,
+			});
+			res.status(500).send(err);
+		}
+	}
 }
 
 // ! Controller Instance
-const UsersController: UserControllerClass = new UserControllerClass();
+const UserController: UserControllerClass = new UserControllerClass();
 
 // ! Exports
-export default UsersController;
+export default UserController;

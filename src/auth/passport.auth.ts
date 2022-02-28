@@ -1,13 +1,13 @@
 // ! Imports
 // * Modules
 import passport from 'passport';
-// * Authentication
+// * Auth
 import GithubStrategy from './github.auth';
 import FacebookSrategy from './facebook.auth';
 import JSONWebTokenStrategy from './jwt.auth';
 import { LoginLocalStrategy, SignupLocalStrategy } from './local.auth';
-// * Data Access Objects
-import UsersDAO from '../daos/users.daos';
+// * Factories
+import UserDAO from '../models/factories/user.factory';
 
 // ! Passport Configuration
 // * User Serialization
@@ -15,7 +15,7 @@ passport.serializeUser((user: any, done) => {
 	done(null, user);
 });
 passport.deserializeUser(async (user: any, done) => {
-	done(null, await UsersDAO.getSecureById(user._id));
+	done(null, await UserDAO.getSecureById(user._id));
 });
 
 // * Strategies Implementation

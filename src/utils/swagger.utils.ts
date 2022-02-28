@@ -25,7 +25,7 @@ const swaggerData: swaggerUi.SwaggerOptions = {
     },
     "servers": [
         {
-            "url": env.SERVER_ADDRESS
+            "url": env.BACKEND_URL
         }
     ],
     "tags": [

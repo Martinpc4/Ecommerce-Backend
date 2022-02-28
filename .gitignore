@@ -1,7 +1,8 @@
-/node_modules
-
 # JetBrains IDE
 .idea
+
+# VSCode configuration
+.vscode
 
 # Logs
 *.log
@@ -21,7 +22,8 @@ dist/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# environment variables files
 .env
 .env.test
+
 .DS_Store

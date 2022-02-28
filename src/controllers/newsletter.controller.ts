@@ -1,25 +1,67 @@
 // ! Imports
-// * Classes
-import {NewsletterClass} from "../classes/newsletter.classes";
-// * Data Access Objects
-import NewsletterDAO from "../daos/newsletter.daos";
-
+// * Controllers
+import NewsletterService from '../services/newsletter.service';
+// * DTOs
+import { NewsletterClass } from '../models/DTOs/newsletter.dto';
+// * Interfaces
+import { Request, Response } from 'express';
+import { newsletterPropertiesInterface } from '../models/interfaces/newsletter.interface';
+import { Types } from 'mongoose';
+// * Logs
+import logger from '../server/logs/index.logs';
 
 // ! Controller Definition
 class NewsletterControllerClass {
-    constructor() {}
-    async create(newsletterInstance: NewsletterClass): Promise<boolean> {
-        try {
-            return await NewsletterDAO.create(newsletterInstance);
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
-    }
+	async subscribe(req: Request, res: Response): Promise<void> {
+		try {
+			if (req.body.email === undefined) {
+				res.status(400).json({ success: false, message: 'Invalid email' });
+				logger.notice({
+					message: 'Invalid email',
+					router: 'NEWS',
+					method: 'POST',
+					route: '/subscribe',
+				});
+			} else {
+				const newsletterProperties: newsletterPropertiesInterface = {
+					email: req.body.email,
+					created_at: new Date(),
+					_id: new Types.ObjectId(),
+				};
+				const flagVar: boolean = await NewsletterService.create(new NewsletterClass(newsletterProperties));
+				if (flagVar) {
+					res.status(200).json({ success: true, message: 'Subscribed to newsletter' });
+					logger.notice({
+						message: 'Subscribed to newsletter',
+						router: 'USER',
+						method: 'POST',
+						route: '/subscribe',
+					});
+				} else {
+					res.status(400).json({ success: false, message: 'Subscription failed' });
+					logger.notice({
+						message: 'Subscription failed',
+						router: 'NEWS',
+						method: 'POST',
+						route: '/subscribe',
+					});
+				}
+			}
+		} catch (err) {
+			logger.error({
+				message: 'Error in subscribing to newsletter',
+				router: 'NEWS',
+				method: 'POST',
+				route: '/subscribe',
+				stack: err,
+			});
+			res.status(500).json({ success: false, message: 'Internal Server Error', stack: err });
+		}
+	}
 }
 
-// ! Controller Instance
-const NewsletterController: NewsletterControllerClass = new NewsletterControllerClass();
+// ! Controller Defintion
+const NewslettersController = new NewsletterControllerClass();
 
 // ! Exports
-export default NewsletterController;
+export default NewslettersController;
