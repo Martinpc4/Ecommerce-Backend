@@ -1,6 +1,6 @@
 # E-commerce Backend | CoderHouse
 
-[![GitHub Profile](https://img.shields.io/badge/GitHub-informational?style=for-the-badge&logo=GitHub&logoColor=171515&color=23272d)](https://github.com/Martinpc4)
+[![GitHub Profile](https://img.shields.io/badge/GitHub-informational?style=for-the-badge&logo=GitHub&logoColor=171515&color=23272d)](https://github.com/martinpcobo)
 [![Contact Me](https://img.shields.io/badge/Email-informational?style=for-the-badge&logo=Mail.Ru&logoColor=ffffff&color=23272d)](mailto:perezcobomartin4@hotmail.com)
 [![LinkedId](https://img.shields.io/badge/LinkedIn-informational?style=for-the-badge&logo=linkedin&logoColor=0077b5&color=23272d)](https://linkedin.com/in/martin-perez-cobo/)
 [![App](https://img.shields.io/badge/Launch_App-informational?style=for-the-badge&logo=heroku&logoColor=430098&color=23272d)](https://ecommerce-backend-coderhouse.herokuapp.com)
